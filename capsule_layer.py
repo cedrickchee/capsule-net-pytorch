@@ -17,13 +17,14 @@ class CapsuleLayer(nn.Module):
     """
     The core implementation of the idea of capsules
     """
-    def __init__(self, in_unit, in_channel, num_unit, unit_size, use_routing):
+    def __init__(self, in_unit, in_channel, num_unit, unit_size, use_routing, cuda):
         super(CapsuleLayer, self).__init__()
 
         self.in_unit = in_unit
         self.in_channel = in_channel
         self.num_unit = num_unit
         self.use_routing = use_routing
+        self.cuda = cuda
 
         if self.use_routing:
             """
@@ -86,7 +87,9 @@ class CapsuleLayer(nn.Module):
 
         # All the routing logits (b_ij in the paper) are initialized to zero.
         b_ij = Variable(torch.zeros(
-            1, self.in_channel, self.num_unit, 1)).cuda()
+            1, self.in_channel, self.num_unit, 1))
+        if self.cuda:
+            b_ij = b_ij.cuda()
 
         # From the paper in the "Capsules on MNIST" section,
         # the sample MNIST test reconstructions of a CapsNet with 3 routing iterations.

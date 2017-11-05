@@ -19,12 +19,14 @@ class Net(nn.Module):
     """
     A simple CapsNet with 3 layers
     """
-    def __init__(self, num_conv_channel, num_primary_unit, primary_unit_size, output_unit_size):
+    def __init__(self, num_conv_channel, num_primary_unit, primary_unit_size, output_unit_size, cuda):
         """
         In the constructor we instantiate one ConvLayer module and two CapsuleLayer modules
         and assign them as member variables.
         """
         super(Net, self).__init__()
+
+        self.cuda = cuda
 
         self.conv1 = ConvLayer(in_channel=1,
                                out_channel=num_conv_channel,
@@ -35,14 +37,16 @@ class Net(nn.Module):
                                     in_channel=num_conv_channel,
                                     num_unit=num_primary_unit,
                                     unit_size=primary_unit_size,
-                                    use_routing=False)
+                                    use_routing=False,
+                                    cuda=cuda)
 
         # DigitCaps
         self.digits = CapsuleLayer(in_unit=num_primary_unit,
                                    in_channel=primary_unit_size,
                                    num_unit=10,
                                    unit_size=output_unit_size,
-                                   use_routing=True)
+                                   use_routing=True,
+                                   cuda=cuda)
 
     def forward(self, x):
         """
@@ -69,7 +73,9 @@ class Net(nn.Module):
         v_c = torch.sqrt((input**2).sum(dim=2, keepdim=True))
 
         # Calculate left and right max() terms.
-        zero = Variable(torch.zeros(1)).cuda()
+        zero = Variable(torch.zeros(1))
+        if self.cuda:
+            zero = zero.cuda()
         m_plus = 0.9
         m_minus = 0.1
         loss_lambda = 0.5

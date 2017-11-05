@@ -12,12 +12,11 @@ from torchvision import transforms, datasets
 from torch.utils.data import DataLoader
 
 
-def normalize_dataset():
-    """Normalize MNIST dataset."""
-    return transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
+# Normalize MNIST dataset.
+data_transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.1307,), (0.3081,))
+])
 
 
 def one_hot_encode(target, length):
@@ -42,16 +41,19 @@ def load_mnist(args):
     """Load MNIST dataset.
     The data is split and normalized between train and test sets.
     """
+    kwargs = {'num_workers': args.threads,
+              'pin_memory': True} if args.cuda else {}
+
     print('===> Loading training datasets')
     training_set = datasets.MNIST(
-        '../data', train=True, download=True, transform=normalize_dataset)
+        '../data', train=True, download=True, transform=data_transform)
     training_data_loader = DataLoader(
-        training_set, num_workers=args.threads, batch_size=args.batch_size, shuffle=True)
+        training_set, batch_size=args.batch_size, shuffle=True, **kwargs)
 
     print('===> Loading testing datasets')
     testing_set = datasets.MNIST(
-        '../data', train=False, download=True, transform=normalize_dataset)
+        '../data', train=False, download=True, transform=data_transform)
     testing_data_loader = DataLoader(
-        testing_set, num_workers=args.threads, batch_size=args.test_batch_size, shuffle=True)
+        testing_set, batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
     return training_data_loader, testing_data_loader

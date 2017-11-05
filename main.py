@@ -41,7 +41,7 @@ def train(model, data_loader, optimizer, epoch):
 
     for batch_idx, (data, target) in enumerate(data_loader):
         target_one_hot = utils.one_hot_encode(
-            target, length=model.digits.num_units)
+            target, length=model.digits.num_unit)
 
         data, target = Variable(data), Variable(target_one_hot)
 
@@ -57,7 +57,7 @@ def train(model, data_loader, optimizer, epoch):
         optimizer.step()
 
         if batch_idx % args.log_interval == 0:
-            mesg = '{}\tEpoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}\n'.format(
+            mesg = '{}\tEpoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 time.ctime(),
                 epoch,
                 batch_idx * len(data),
@@ -107,7 +107,7 @@ def test(model, data_loader):
 
     test_loss /= len(data_loader.dataset)
 
-    mesg = 'Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+    mesg = 'Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
         test_loss,
         correct,
         len(data_loader.dataset),
@@ -173,7 +173,8 @@ def main():
     model = Net(num_conv_channel=args.num_conv_channel,
                 num_primary_unit=args.num_primary_unit,
                 primary_unit_size=args.primary_unit_size,
-                output_unit_size=args.output_unit_size)
+                output_unit_size=args.output_unit_size,
+                cuda=args.cuda)
 
     if cuda:
         model = model.cuda()
