@@ -13,8 +13,6 @@ Author: Cedric Chee
 
 from __future__ import print_function
 import argparse
-import sys
-import time
 
 import torch
 import torch.optim as optim
@@ -57,8 +55,7 @@ def train(model, data_loader, optimizer, epoch):
         optimizer.step()
 
         if batch_idx % args.log_interval == 0:
-            mesg = '{}\tEpoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                time.ctime(),
+            mesg = 'Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch,
                 batch_idx * len(data),
                 len(data_loader.dataset),
@@ -87,7 +84,7 @@ def test(model, data_loader):
     for data, target in data_loader:
         target_indices = target
         target_one_hot = utils.one_hot_encode(
-            target_indices, length=model.digits.num_units)
+            target_indices, length=model.digits.num_unit)
 
         data, target = Variable(data, volatile=True), Variable(target_one_hot)
 
@@ -133,12 +130,12 @@ def main():
                         default=128, help='testing batch size. default=128')
     parser.add_argument('--loss-threshold', type=float, default=0.0001,
                         help='stop training if loss goes below this threshold. default=0.0001')
-    parser.add_argument("--log-interval", type=int, default=1,
-                        help='number of images after which the training loss is logged, default is 1')
-    parser.add_argument('--cuda', action='store_true',
-                        help='set it to 1 for running on GPU, 0 for CPU')
+    parser.add_argument('--log-interval', type=int, default=10,
+                        help='how many batches to wait before logging training status, default=10')
+    parser.add_argument('--no-cuda', action='store_true', default=False,
+                        help='disables CUDA training, default=false')
     parser.add_argument('--threads', type=int, default=4,
-                        help='number of threads for data loader to use')
+                        help='number of threads for data loader to use, default=4')
     parser.add_argument('--seed', type=int, default=42,
                         help='random seed for training. default=42')
     parser.add_argument('--num-conv-channel', type=int, default=256,
@@ -149,20 +146,18 @@ def main():
                         default=1152, help='primary unit size. default=1152')
     parser.add_argument('--output-unit-size', type=int,
                         default=16, help='output unit size. default=16')
+    parser.add_argument('--num-routing', type=int,
+                        default=3, help='number of routing iteration. default=3')
 
     args = parser.parse_args()
 
     print(args)
 
     # Check GPU or CUDA is available
-    cuda = args.cuda
-    if cuda and not torch.cuda.is_available():
-        print(
-            "ERROR: No GPU/cuda is not available. Try running on CPU or run without --cuda")
-        sys.exit(1)
+    args.cuda = not args.no_cuda and torch.cuda.is_available()
 
     torch.manual_seed(args.seed)
-    if cuda:
+    if args.cuda:
         torch.cuda.manual_seed(args.seed)
 
     # Load data
@@ -174,10 +169,11 @@ def main():
                 num_primary_unit=args.num_primary_unit,
                 primary_unit_size=args.primary_unit_size,
                 output_unit_size=args.output_unit_size,
-                cuda=args.cuda)
+                num_routing=args.num_routing,
+                cuda_enabled=args.cuda)
 
-    if cuda:
-        model = model.cuda()
+    if args.cuda:
+        model.cuda()
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 

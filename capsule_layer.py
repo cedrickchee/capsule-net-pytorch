@@ -17,14 +17,17 @@ class CapsuleLayer(nn.Module):
     """
     The core implementation of the idea of capsules
     """
-    def __init__(self, in_unit, in_channel, num_unit, unit_size, use_routing, cuda):
+
+    def __init__(self, in_unit, in_channel, num_unit, unit_size, use_routing,
+                 num_routing, cuda_enabled):
         super(CapsuleLayer, self).__init__()
 
         self.in_unit = in_unit
         self.in_channel = in_channel
         self.num_unit = num_unit
         self.use_routing = use_routing
-        self.cuda = cuda
+        self.num_routing = num_routing
+        self.cuda_enabled = cuda_enabled
 
         if self.use_routing:
             """
@@ -50,7 +53,8 @@ class CapsuleLayer(nn.Module):
                 self.add_module("conv_unit" + str(idx), unit)
                 return unit
 
-            self.conv_units = [create_conv_unit(u) for u in range(self.num_unit)]
+            self.conv_units = [create_conv_unit(
+                u) for u in range(self.num_unit)]
 
     @staticmethod
     def squash(sj):
@@ -88,12 +92,12 @@ class CapsuleLayer(nn.Module):
         # All the routing logits (b_ij in the paper) are initialized to zero.
         b_ij = Variable(torch.zeros(
             1, self.in_channel, self.num_unit, 1))
-        if self.cuda:
+        if self.cuda_enabled:
             b_ij = b_ij.cuda()
 
         # From the paper in the "Capsules on MNIST" section,
         # the sample MNIST test reconstructions of a CapsNet with 3 routing iterations.
-        num_iterations = 3
+        num_iterations = self.num_routing
 
         for iteration in range(num_iterations):
             # Routing algorithm

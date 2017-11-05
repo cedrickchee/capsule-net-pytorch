@@ -46,13 +46,13 @@ def load_mnist(args):
 
     print('===> Loading training datasets')
     training_set = datasets.MNIST(
-        '../data', train=True, download=True, transform=data_transform)
+        './data', train=True, download=True, transform=data_transform)
     training_data_loader = DataLoader(
         training_set, batch_size=args.batch_size, shuffle=True, **kwargs)
 
     print('===> Loading testing datasets')
     testing_set = datasets.MNIST(
-        '../data', train=False, download=True, transform=data_transform)
+        './data', train=False, download=True, transform=data_transform)
     testing_data_loader = DataLoader(
         testing_set, batch_size=args.test_batch_size, shuffle=True, **kwargs)
 

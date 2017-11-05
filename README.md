@@ -54,11 +54,13 @@ $ python main.py
 | Training batch size | 128 | --batch-size 128 |
 | Testing batch size | 128 | --test-batch-size 128 |
 | Loss threshold | 0.001 | --loss-threshold 0.001 |
-| Log interval | 1 | --log-interval 1 |
+| Log interval | 10 | --log-interval 10 |
+| Disables CUDA training | false | --no-cuda |
 | Num. of convolutional channel | 256 | --num-conv-channel 256 |
 | Num. of primary unit | 8 | --num-primary-unit 8 |
 | Primary unit size | 1152 | --primary-unit-size 1152 |
 | Output unit size | 16 | --output-unit-size 16 |
+| Num. routing iteration | 3 | --num-routing 3 |
 
 ## Results
 Coming soon!
