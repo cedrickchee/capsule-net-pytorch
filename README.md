@@ -31,11 +31,12 @@ The model was trained on the standard [MNIST](http://yann.lecun.com/exdb/mnist/)
 
 ### Training and Evaluation
 **Step 1.**
-Clone this repository with ``git``.
+Clone this repository with ``git`` and install project dependencies.
 
 ```
 $ git clone https://github.com/cedrickchee/capsule-net-pytorch.git
 $ cd capsule-net-pytorch
+$ pip install -r requirements.txt
 ```
 
 **Step 2.** 
@@ -43,6 +44,20 @@ Start the training and evaluation:
 ```
 $ python main.py
 ```
+
+The default hyper parameters:
+| Parameter | Value | CLI arguments |
+| --- | --- | --- |
+| Training epochs | 10 | --epochs 10 |
+| Learning rate | 0.01 | --lr 0.01 |
+| Training batch size | 128 | --batch-size 128 |
+| Testing batch size | 128 | --test-batch-size 128 |
+| Loss threshold | 0.001 | --loss-threshold 0.001 |
+| Log interval | 1 | --log-interval 1 |
+| Num. of convolutional channel | 256 | --num-conv-channel 256 |
+| Num. of primary unit | 8 | --num-primary-unit 8 |
+| Primary unit size | 1152 | --primary-unit-size 1152 |
+| Output unit size | 16 | --output-unit-size 16 |
 
 ## Results
 Coming soon!
@@ -60,11 +75,12 @@ Coming soon!
 - [WIP] Publish results.
 - [WIP] More testing.
 - Separate training and evaluation into independent command.
-- Jupyter Notebook version
+- Jupyter Notebook version.
 - Create a sample to show how we can apply CapsNet to real-world application.
 - Experiment with CapsNet:
-    * Try using another dataset
-    * Come out a more creative model structure
+    * Try using another dataset.
+    * Come out a more creative model structure.
+- Pre-trained model and weights.
 
 ## Credits
 
