@@ -105,3 +105,6 @@ venv.bak/
 
 # IDE settings for Visual Studio Code
 .vscode
+
+# Data
+data/
