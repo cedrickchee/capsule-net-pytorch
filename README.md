@@ -45,7 +45,8 @@ Start the training and evaluation:
 $ python main.py
 ```
 
-The default hyper parameters:
+**The default hyper parameters:**
+
 | Parameter | Value | CLI arguments |
 | --- | --- | --- |
 | Training epochs | 10 | --epochs 10 |
