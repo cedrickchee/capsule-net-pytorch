@@ -25,6 +25,8 @@ The model was trained on the standard [MNIST](http://yann.lecun.com/exdb/mnist/)
 ## Requirements
 - Python 3
 - [PyTorch](http://pytorch.org/)
+    - Tested with version 0.2.0.post4.
+    - Code will not run with version 0.1.2 due to `keepdim` not available in this version.
 - TorchVision
 
 ## Usage
@@ -66,13 +68,58 @@ $ python main.py
 Coming soon!
 
 - training loss
-![total_loss](internal/img/training/training_loss.png)
+```
+# Log from the end of the last epoch.
 
-![margin_loss](internal/img/training/margin_loss.png)
-![reconstruction_loss](internal/img/training/reconstruction_loss.png)
+... ... ... ... ... ... ... ... ... ... ...
+... ... ... ... ... ... ... ... ... ... ...
+Epoch: 10 [54912/60000 (91%)]   Loss: 0.039524
+Epoch: 10 [55040/60000 (92%)]   Loss: 0.022957
+Epoch: 10 [55168/60000 (92%)]   Loss: 0.039683
+Epoch: 10 [55296/60000 (92%)]   Loss: 0.029625
+Epoch: 10 [55424/60000 (92%)]   Loss: 0.038952
+Epoch: 10 [55552/60000 (93%)]   Loss: 0.042668
+Epoch: 10 [55680/60000 (93%)]   Loss: 0.048452
+Epoch: 10 [55808/60000 (93%)]   Loss: 0.044467
+Epoch: 10 [55936/60000 (93%)]   Loss: 0.023401
+Epoch: 10 [56064/60000 (93%)]   Loss: 0.033448
+Epoch: 10 [56192/60000 (94%)]   Loss: 0.033800
+Epoch: 10 [56320/60000 (94%)]   Loss: 0.032488
+Epoch: 10 [56448/60000 (94%)]   Loss: 0.027381
+Epoch: 10 [56576/60000 (94%)]   Loss: 0.067512
+Epoch: 10 [56704/60000 (94%)]   Loss: 0.044439
+Epoch: 10 [56832/60000 (95%)]   Loss: 0.050315
+Epoch: 10 [56960/60000 (95%)]   Loss: 0.044815
+Epoch: 10 [57088/60000 (95%)]   Loss: 0.036546
+Epoch: 10 [57216/60000 (95%)]   Loss: 0.030145
+Epoch: 10 [57344/60000 (96%)]   Loss: 0.039890
+Epoch: 10 [57472/60000 (96%)]   Loss: 0.049812
+Epoch: 10 [57600/60000 (96%)]   Loss: 0.036459
+Epoch: 10 [57728/60000 (96%)]   Loss: 0.045392
+Epoch: 10 [57856/60000 (96%)]   Loss: 0.026301
+Epoch: 10 [57984/60000 (97%)]   Loss: 0.037954
+Epoch: 10 [58112/60000 (97%)]   Loss: 0.036555
+Epoch: 10 [58240/60000 (97%)]   Loss: 0.035145
+Epoch: 10 [58368/60000 (97%)]   Loss: 0.025339
+Epoch: 10 [58496/60000 (97%)]   Loss: 0.037162
+Epoch: 10 [58624/60000 (98%)]   Loss: 0.028909
+Epoch: 10 [58752/60000 (98%)]   Loss: 0.034925
+Epoch: 10 [58880/60000 (98%)]   Loss: 0.033485
+Epoch: 10 [59008/60000 (98%)]   Loss: 0.018011
+Epoch: 10 [59136/60000 (99%)]   Loss: 0.048944
+Epoch: 10 [59264/60000 (99%)]   Loss: 0.022608
+Epoch: 10 [59392/60000 (99%)]   Loss: 0.041117
+Epoch: 10 [59520/60000 (99%)]   Loss: 0.046873
+Epoch: 10 [59648/60000 (99%)]   Loss: 0.035419
+Epoch: 10 [59776/60000 (100%)]  Loss: 0.029488
+Epoch: 10 [44928/60000 (100%)]  Loss: 0.045561
+```
 
 - evaluation accuracy
-![test_img1](internal/img/evaluation/test_000.png)
+```
+Test set: Average loss: 0.0004, Accuracy: 9885/10000 (99%)
+Checkpoint saved to model_epoch_10.pth
+```
 
 ## TODO
 - [WIP] Publish results.
