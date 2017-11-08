@@ -122,7 +122,7 @@ Checkpoint saved to model_epoch_10.pth
 ```
 
 ## TODO
-- [WIP] Publish results.
+- [DONE] Publish results.
 - [WIP] More testing.
 - Separate training and evaluation into independent command.
 - Jupyter Notebook version.
@@ -131,6 +131,8 @@ Checkpoint saved to model_epoch_10.pth
     * Try using another dataset.
     * Come out a more creative model structure.
 - Pre-trained model and weights.
+- Add visualization for training and evaluation metrics.
+- Implement recontruction loss.
 
 ## Credits
 
