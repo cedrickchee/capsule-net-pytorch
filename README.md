@@ -1,7 +1,7 @@
 # PyTorch CapsNet: Capsule Network for PyTorch
 
 [![license](https://img.shields.io/github/license/mashape/apistatus.svg?maxAge=2592000)](https://github.com/cedrickchee/capsule-net-pytorch/blob/master/LICENSE)
-![completion](https://img.shields.io/badge/completion%20state-90%25-green.svg?style=plastic)
+![completion](https://img.shields.io/badge/completion%20state-95%25-green.svg?style=plastic)
 
 A CUDA-enabled PyTorch implementation of CapsNet (Capsule Network) based on this paper:
 [Sara Sabour, Nicholas Frosst, Geoffrey E Hinton. Dynamic Routing Between Capsules. NIPS 2017](https://arxiv.org/abs/1710.09829)
@@ -42,17 +42,25 @@ $ pip install -r requirements.txt
 ```
 
 **Step 2.** 
-Start the training and evaluation:
+Start the CapsNet on MNIST training and evaluation:
 
-- running on CPU
+- Training with default settings:
 ```bash
 $ python main.py
 ```
 
-- running on GPU
-    - For example, running on 8 GPUs.
+- Training on 8 GPUs with 30 epochs and 1 routing iteration:
 ```bash
-$ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python main.py --epochs 30 --threads 16 --batch-size 128 --test-batch-size 128
+$ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python main.py --epochs 30 --num-routing 1 --threads 16 --batch-size 128 --test-batch-size 128
+```
+
+**Step 3.**
+Test a pre-trained model:
+
+If you have trained a model in Step 2 above, then the trained model will be saved to `results/trained_model/model_epoch_10.pth`. Now just run the following command to get test results.
+
+```bash
+$ python main.py --is-training 0 --weights results/trained_model/model_epoch_10.pth
 ```
 
 **The default hyper parameters:**
@@ -100,56 +108,63 @@ CapsNet-v4 | 3 | yes | -- | *0.25 (0.005)*
 
 ### Training loss
 
-```text
-# Log from the end of the last epoch.
+Log from the end of the last epoch. View the full log [here](results/training_testing_log.txt).
 
+```text
 ... ... ... ... ... ... ... ... ... ... ...
 ... ... ... ... ... ... ... ... ... ... ...
-Epoch: 10 [54912/60000 (91%)]   Loss: 0.039524
-Epoch: 10 [55040/60000 (92%)]   Loss: 0.022957
-Epoch: 10 [55168/60000 (92%)]   Loss: 0.039683
-Epoch: 10 [55296/60000 (92%)]   Loss: 0.029625
-Epoch: 10 [55424/60000 (92%)]   Loss: 0.038952
-Epoch: 10 [55552/60000 (93%)]   Loss: 0.042668
-Epoch: 10 [55680/60000 (93%)]   Loss: 0.048452
-Epoch: 10 [55808/60000 (93%)]   Loss: 0.044467
-Epoch: 10 [55936/60000 (93%)]   Loss: 0.023401
-Epoch: 10 [56064/60000 (93%)]   Loss: 0.033448
-Epoch: 10 [56192/60000 (94%)]   Loss: 0.033800
-Epoch: 10 [56320/60000 (94%)]   Loss: 0.032488
-Epoch: 10 [56448/60000 (94%)]   Loss: 0.027381
-Epoch: 10 [56576/60000 (94%)]   Loss: 0.067512
-Epoch: 10 [56704/60000 (94%)]   Loss: 0.044439
-Epoch: 10 [56832/60000 (95%)]   Loss: 0.050315
-Epoch: 10 [56960/60000 (95%)]   Loss: 0.044815
-Epoch: 10 [57088/60000 (95%)]   Loss: 0.036546
-Epoch: 10 [57216/60000 (95%)]   Loss: 0.030145
-Epoch: 10 [57344/60000 (96%)]   Loss: 0.039890
-Epoch: 10 [57472/60000 (96%)]   Loss: 0.049812
-Epoch: 10 [57600/60000 (96%)]   Loss: 0.036459
-Epoch: 10 [57728/60000 (96%)]   Loss: 0.045392
-Epoch: 10 [57856/60000 (96%)]   Loss: 0.026301
-Epoch: 10 [57984/60000 (97%)]   Loss: 0.037954
-Epoch: 10 [58112/60000 (97%)]   Loss: 0.036555
-Epoch: 10 [58240/60000 (97%)]   Loss: 0.035145
-Epoch: 10 [58368/60000 (97%)]   Loss: 0.025339
-Epoch: 10 [58496/60000 (97%)]   Loss: 0.037162
-Epoch: 10 [58624/60000 (98%)]   Loss: 0.028909
-Epoch: 10 [58752/60000 (98%)]   Loss: 0.034925
-Epoch: 10 [58880/60000 (98%)]   Loss: 0.033485
-Epoch: 10 [59008/60000 (98%)]   Loss: 0.018011
-Epoch: 10 [59136/60000 (99%)]   Loss: 0.048944
-Epoch: 10 [59264/60000 (99%)]   Loss: 0.022608
-Epoch: 10 [59392/60000 (99%)]   Loss: 0.041117
-Epoch: 10 [59520/60000 (99%)]   Loss: 0.046873
-Epoch: 10 [59648/60000 (99%)]   Loss: 0.035419
-Epoch: 10 [59776/60000 (100%)]  Loss: 0.029488
-Epoch: 10 [44928/60000 (100%)]  Loss: 0.045561
+Epoch: 10 [0/60000 (0%)]        Loss: 0.235540
+Epoch: 10 [1280/60000 (2%)]     Loss: 0.233107
+Epoch: 10 [2560/60000 (4%)]     Loss: 0.232818
+Epoch: 10 [3840/60000 (6%)]     Loss: 0.248812
+Epoch: 10 [5120/60000 (9%)]     Loss: 0.246014
+Epoch: 10 [6400/60000 (11%)]    Loss: 0.237645
+Epoch: 10 [7680/60000 (13%)]    Loss: 0.248725
+Epoch: 10 [8960/60000 (15%)]    Loss: 0.237840
+Epoch: 10 [10240/60000 (17%)]   Loss: 0.246938
+Epoch: 10 [11520/60000 (19%)]   Loss: 0.247348
+Epoch: 10 [12800/60000 (21%)]   Loss: 0.246758
+Epoch: 10 [14080/60000 (23%)]   Loss: 0.246680
+Epoch: 10 [15360/60000 (26%)]   Loss: 0.253511
+Epoch: 10 [16640/60000 (28%)]   Loss: 0.232439
+Epoch: 10 [17920/60000 (30%)]   Loss: 0.229010
+Epoch: 10 [19200/60000 (32%)]   Loss: 0.241444
+Epoch: 10 [20480/60000 (34%)]   Loss: 0.239509
+Epoch: 10 [21760/60000 (36%)]   Loss: 0.235857
+Epoch: 10 [23040/60000 (38%)]   Loss: 0.240081
+Epoch: 10 [24320/60000 (41%)]   Loss: 0.233029
+Epoch: 10 [25600/60000 (43%)]   Loss: 0.239576
+Epoch: 10 [26880/60000 (45%)]   Loss: 0.252535
+Epoch: 10 [28160/60000 (47%)]   Loss: 0.243013
+Epoch: 10 [29440/60000 (49%)]   Loss: 0.264241
+Epoch: 10 [30720/60000 (51%)]   Loss: 0.241051
+Epoch: 10 [32000/60000 (53%)]   Loss: 0.247486
+Epoch: 10 [33280/60000 (55%)]   Loss: 0.238380
+Epoch: 10 [34560/60000 (58%)]   Loss: 0.253946
+Epoch: 10 [35840/60000 (60%)]   Loss: 0.258566
+Epoch: 10 [37120/60000 (62%)]   Loss: 0.244170
+Epoch: 10 [38400/60000 (64%)]   Loss: 0.240550
+Epoch: 10 [39680/60000 (66%)]   Loss: 0.232219
+Epoch: 10 [40960/60000 (68%)]   Loss: 0.233181
+Epoch: 10 [42240/60000 (70%)]   Loss: 0.246600
+Epoch: 10 [43520/60000 (72%)]   Loss: 0.235462
+Epoch: 10 [44800/60000 (75%)]   Loss: 0.246548
+Epoch: 10 [46080/60000 (77%)]   Loss: 0.234177
+Epoch: 10 [47360/60000 (79%)]   Loss: 0.240156
+Epoch: 10 [48640/60000 (81%)]   Loss: 0.246746
+Epoch: 10 [49920/60000 (83%)]   Loss: 0.232246
+Epoch: 10 [51200/60000 (85%)]   Loss: 0.237809
+Epoch: 10 [52480/60000 (87%)]   Loss: 0.250668
+Epoch: 10 [53760/60000 (90%)]   Loss: 0.233228
+Epoch: 10 [55040/60000 (92%)]   Loss: 0.245191
+Epoch: 10 [56320/60000 (94%)]   Loss: 0.251059
+Epoch: 10 [57600/60000 (96%)]   Loss: 0.236024
+Epoch: 10 [58880/60000 (98%)]   Loss: 0.236005
 ```
 
 ### Evaluation accuracy
 ```text
-Test set: Average loss: 0.0004, Accuracy: 9885/10000 (99%)
+Test set: Average loss: 0.0020, Accuracy: 9908/10000 (99%)
 Checkpoint saved to model_epoch_10.pth
 ```
 
