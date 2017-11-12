@@ -57,11 +57,13 @@ $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python main.py --epochs 30 --num-routing 
 **Step 3.**
 Test a pre-trained model:
 
-If you have trained a model in Step 2 above, then the trained model will be saved to `results/trained_model/model_epoch_10.pth`. Now just run the following command to get test results.
+If you have trained a model in Step 2 above, then the trained model will be saved to `results/trained_model/model_epoch_10.pth`. [WIP] Now just run the following command to get test results.
 
 ```bash
 $ python main.py --is-training 0 --weights results/trained_model/model_epoch_10.pth
 ```
+
+You can download the pre-trained model from my [Google Drive](https://drive.google.com/uc?export=download&id=1ojmG1nEkQKGPKO9lJr5gIupvNnKnyZ87).
 
 **The default hyper parameters:**
 
