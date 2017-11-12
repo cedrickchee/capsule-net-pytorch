@@ -58,15 +58,16 @@ $ python main.py
 | Loss threshold | 0.001 | --loss-threshold 0.001 |
 | Log interval | 10 | --log-interval 10 |
 | Disables CUDA training | false | --no-cuda |
-| Num. of convolutional channel | 256 | --num-conv-channel 256 |
+| Num. of channels produced by the convolution | 256 | --num-conv-out-channel 256 |
+| Num. of input channels to the convolution | 1 | --num-conv-in-channel 1 |
 | Num. of primary unit | 8 | --num-primary-unit 8 |
 | Primary unit size | 1152 | --primary-unit-size 1152 |
+| Num. of digit classes | 10 | --num-classes 10 |
 | Output unit size | 16 | --output-unit-size 16 |
 | Num. routing iteration | 3 | --num-routing 3 |
+| Regularization coefficient for reconstruction loss | 0.0005 | --regularization-scale 0.0005 |
 
 ## Results
-Coming soon!
-
 - training loss
 ```
 # Log from the end of the last epoch.
@@ -132,7 +133,7 @@ Checkpoint saved to model_epoch_10.pth
     * Come out a more creative model structure.
 - Pre-trained model and weights.
 - Add visualization for training and evaluation metrics.
-- Implement recontruction loss.
+- [DONE] Implement recontruction loss.
 
 ## Credits
 
