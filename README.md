@@ -35,7 +35,7 @@ The model was trained on the standard [MNIST](http://yann.lecun.com/exdb/mnist/)
 **Step 1.**
 Clone this repository with ``git`` and install project dependencies.
 
-```
+```bash
 $ git clone https://github.com/cedrickchee/capsule-net-pytorch.git
 $ cd capsule-net-pytorch
 $ pip install -r requirements.txt
@@ -43,8 +43,16 @@ $ pip install -r requirements.txt
 
 **Step 2.** 
 Start the training and evaluation:
-```
+
+- running on CPU
+```bash
 $ python main.py
+```
+
+- running on GPU
+    - For example, running on 8 GPUs.
+```bash
+$ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python main.py --epochs 30 --threads 16 --batch-size 128 --test-batch-size 128
 ```
 
 **The default hyper parameters:**
@@ -68,8 +76,31 @@ $ python main.py
 | Regularization coefficient for reconstruction loss | 0.0005 | --regularization-scale 0.0005 |
 
 ## Results
-- training loss
+
+### Test error
+
+CapsNet classification test error on MNIST. The MNIST average and standard deviation results are reported from 3 trials.
+
+[WIP] The results can be reproduced by running the following commands.
+
+```bash
+ python main.py --num-routing 1 --regularization-scale 0.0      #CapsNet-v1
+ python main.py --num-routing 1 --regularization-scale 0.0005   #CapsNet-v2
+ python main.py --num-routing 3 --regularization-scale 0.0      #CapsNet-v3
+ python main.py --num-routing 3 --regularization-scale 0.0005   #CapsNet-v4
 ```
+
+Method | Routing | Reconstruction | MNIST (%) | *Paper*
+:---------|:------:|:---:|:----:|:----:
+Baseline |  -- | -- | -- | *0.39*
+CapsNet-v1 | 1 | no | -- | *0.34 (0.032)*
+CapsNet-v2 | 1 | yes | -- | *0.29 (0.011)*
+CapsNet-v3 | 3 | no | -- | *0.35 (0.036)*
+CapsNet-v4 | 3 | yes | -- | *0.25 (0.005)*
+
+### Training loss
+
+```text
 # Log from the end of the last epoch.
 
 ... ... ... ... ... ... ... ... ... ... ...
@@ -116,15 +147,30 @@ Epoch: 10 [59776/60000 (100%)]  Loss: 0.029488
 Epoch: 10 [44928/60000 (100%)]  Loss: 0.045561
 ```
 
-- evaluation accuracy
-```
+### Evaluation accuracy
+```text
 Test set: Average loss: 0.0004, Accuracy: 9885/10000 (99%)
 Checkpoint saved to model_epoch_10.pth
 ```
 
+### Reconstruction
+
+The results of CapsNet-v4.
+
+Digits at left are reconstructed images.
+<table>
+  <tr>
+    <td>
+     <img src="results/reconstructed_images.png"/>
+    </td>
+    <td>
+    </td>
+  </tr>
+</table>
+
 ## TODO
 - [DONE] Publish results.
-- [WIP] More testing.
+- [DONE] More testing.
 - Separate training and evaluation into independent command.
 - Jupyter Notebook version.
 - Create a sample to show how we can apply CapsNet to real-world application.
