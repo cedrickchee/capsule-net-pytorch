@@ -48,8 +48,8 @@ def train(model, data_loader, optimizer, epoch):
             target = target.cuda()
 
         optimizer.zero_grad()
-        output = model(data)
-        loss = model.loss(output, target)
+        output = model(data) # output from DigitCaps (out_digit_caps)
+        loss = model.loss(data, output, target) # pass in data for image reconstruction
         loss.backward()
         last_loss = loss.data[0]
         optimizer.step()
@@ -92,10 +92,10 @@ def test(model, data_loader):
             data = data.cuda()
             target = target.cuda()
 
-        output = model(data)
+        output = model(data) # output from DigitCaps (out_digit_caps)
 
         # sum up batch loss
-        test_loss += model.loss(output, target, size_average=False).data[0]
+        test_loss += model.loss(data, output, target, size_average=False).data[0] # pass in data for image reconstruction
 
         # evaluate
         v_magnitud = torch.sqrt((output**2).sum(dim=2, keepdim=True))
@@ -131,23 +131,31 @@ def main():
     parser.add_argument('--loss-threshold', type=float, default=0.0001,
                         help='stop training if loss goes below this threshold. default=0.0001')
     parser.add_argument('--log-interval', type=int, default=10,
-                        help='how many batches to wait before logging training status, default=10')
+                        help='how many batches to wait before logging training status. default=10')
     parser.add_argument('--no-cuda', action='store_true', default=False,
-                        help='disables CUDA training, default=false')
+                        help='disables CUDA training. default=false')
     parser.add_argument('--threads', type=int, default=4,
-                        help='number of threads for data loader to use, default=4')
+                        help='number of threads for data loader to use. default=4')
     parser.add_argument('--seed', type=int, default=42,
                         help='random seed for training. default=42')
-    parser.add_argument('--num-conv-channel', type=int, default=256,
-                        help='number of convolutional channel. default=256')
+    parser.add_argument('--num-conv-out-channel', type=int, default=256,
+                        help='number of channels produced by the convolution. default=256')
+    parser.add_argument('--num-conv-in-channel', type=int, default=1,
+                        help='number of input channels to the convolution. default=1')
     parser.add_argument('--num-primary-unit', type=int, default=8,
                         help='number of primary unit. default=8')
     parser.add_argument('--primary-unit-size', type=int,
-                        default=1152, help='primary unit size. default=1152')
+                        default=1152, help='primary unit size is 32 * 6 * 6. default=1152')
+    parser.add_argument('--num-classes', type=int, default=10,
+                        help='number of digit classes. 1 unit for one MNIST digit. default=10')
     parser.add_argument('--output-unit-size', type=int,
                         default=16, help='output unit size. default=16')
     parser.add_argument('--num-routing', type=int,
                         default=3, help='number of routing iteration. default=3')
+    parser.add_argument('--use-reconstruction-loss', action='store_true', default=True,
+                        help='use an additional reconstruction loss. default=True')
+    parser.add_argument('--regularization-scale', type=float, default=0.0005,
+                        help='regularization coefficient for reconstruction loss. default=0.0005')
 
     args = parser.parse_args()
 
@@ -165,11 +173,15 @@ def main():
 
     # Build Capsule Network
     print('===> Building model')
-    model = Net(num_conv_channel=args.num_conv_channel,
+    model = Net(num_conv_in_channel=args.num_conv_in_channel,
+                num_conv_out_channel=args.num_conv_out_channel,
                 num_primary_unit=args.num_primary_unit,
                 primary_unit_size=args.primary_unit_size,
+                num_classes=args.num_classes,
                 output_unit_size=args.output_unit_size,
                 num_routing=args.num_routing,
+                use_reconstruction_loss=args.use_reconstruction_loss,
+                regularization_scale=args.regularization_scale,
                 cuda_enabled=args.cuda)
 
     if args.cuda:

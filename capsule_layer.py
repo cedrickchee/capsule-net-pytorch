@@ -11,6 +11,7 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 import torch.nn.functional as F
+import utils
 
 
 class CapsuleLayer(nn.Module):
@@ -34,8 +35,7 @@ class CapsuleLayer(nn.Module):
             Based on the paper, DigitCaps which is capsule layer(s) with
             capsule inputs use a routing algorithm that uses this weight matrix, Wij
             """
-            self.W = nn.Parameter(torch.randn(
-                1, in_channel, num_unit, unit_size, in_unit))
+            self.weight = nn.Parameter(torch.randn(1, in_channel, num_unit, unit_size, in_unit))
         else:
             """
             According to the CapsNet architecture section in the paper,
@@ -43,30 +43,8 @@ class CapsuleLayer(nn.Module):
             No routing is used between Conv1 and PrimaryCapsules.
 
             This means PrimaryCapsules is composed of several convolutional units.
-            So, implementation-wise, it uses normal convolutional layer with a nonlinearity (squash).
             """
-            def create_conv_unit(idx):
-                unit = nn.Conv2d(in_channels=in_channel,
-                                 out_channels=32,
-                                 kernel_size=9,
-                                 stride=2)
-                self.add_module("conv_unit" + str(idx), unit)
-                return unit
-
-            self.conv_units = [create_conv_unit(
-                u) for u in range(self.num_unit)]
-
-    @staticmethod
-    def squash(sj):
-        """
-        Non-linear 'squashing' function.
-        This implement equation 1 from the paper.
-        """
-        sj_mag_sq = torch.sum(sj**2, dim=2, keepdim=True)
-        # ||sj ||
-        sj_mag = torch.sqrt(sj_mag_sq)
-        v_j = (sj_mag_sq / (1.0 + sj_mag_sq)) * (sj / sj_mag)
-        return v_j
+            self.conv_units = [self.conv_unit(u) for u in range(self.num_unit)]
 
     def forward(self, x):
         if self.use_routing:
@@ -84,10 +62,10 @@ class CapsuleLayer(nn.Module):
 
         x = x.transpose(1, 2)
         x = torch.stack([x] * self.num_unit, dim=2).unsqueeze(4)
-        W = torch.cat([self.W] * batch_size, dim=0)
+        weight = torch.cat([self.weight] * batch_size, dim=0)
 
         # Transform inputs by weight matrix.
-        u_hat = torch.matmul(W, x)
+        u_hat = torch.matmul(weight, x)
 
         # All the routing logits (b_ij in the paper) are initialized to zero.
         b_ij = Variable(torch.zeros(
@@ -110,7 +88,7 @@ class CapsuleLayer(nn.Module):
             # u_hat is weighted inputs
             s_j = (c_ij * u_hat).sum(dim=1, keepdim=True)
 
-            v_j = CapsuleLayer.squash(s_j)
+            v_j = utils.squash(s_j)
 
             v_j1 = torch.cat([v_j] * self.in_channel, dim=1)
 
@@ -138,4 +116,17 @@ class CapsuleLayer(nn.Module):
         unit = unit.view(x.size(0), self.num_unit, -1)
 
         # Return squashed outputs.
-        return CapsuleLayer.squash(unit)
+        return utils.squash(unit)
+
+    def conv_unit(self, idx):
+        """
+        Create a convolutional unit.
+
+        A convolutional unit uses normal convolutional layer with a nonlinearity (squash).
+        """
+        unit = nn.Conv2d(in_channels=self.in_channel,
+                         out_channels=32,
+                         kernel_size=9,
+                         stride=2)
+        self.add_module("conv_unit" + str(idx), unit)
+        return unit
