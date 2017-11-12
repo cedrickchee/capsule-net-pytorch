@@ -28,5 +28,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Initial release. The first beta version. API is stable. The code runs. So, I think it's safe to use for development but not ready for general production usage.
 
-[Unreleased]: https://github.com/olivierlacan/keep-a-changelog/compare/v1.0.0...HEAD
-[0.1.0]: https://github.com/cedrickchee/keep-a-changelog/compare/v0.0.1...v0.1.0
+[Unreleased]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v1.0.0...HEAD
+[0.1.0]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v0.0.1...v0.1.0
