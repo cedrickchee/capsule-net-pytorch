@@ -34,7 +34,7 @@ def one_hot_encode(target, length):
 
 def checkpoint(state, epoch):
     """Save checkpoint"""
-    model_out_path = 'model_epoch_{}.pth'.format(epoch)
+    model_out_path = 'results/trained_model/model_epoch_{}.pth'.format(epoch)
     torch.save(state, model_out_path)
     print('Checkpoint saved to {}'.format(model_out_path))
 
