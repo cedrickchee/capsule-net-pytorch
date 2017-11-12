@@ -163,7 +163,7 @@ class Net(nn.Module):
         """
         Save reconstructed images.
         """
-        utils.save_image(recon_img, 'reconstructed_images.png')
+        utils.save_image(recon_img, 'results/reconstructed_images.png')
 
         """
         Calculate reconstruction loss.

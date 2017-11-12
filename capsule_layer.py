@@ -44,7 +44,10 @@ class CapsuleLayer(nn.Module):
 
             This means PrimaryCapsules is composed of several convolutional units.
             """
-            self.conv_units = [self.conv_unit(u) for u in range(self.num_unit)]
+            # self.conv_units = [self.conv_unit(u) for u in range(self.num_unit)]
+            self.conv_units = nn.ModuleList([
+                nn.Conv2d(self.in_channel, 32, 9, 2) for u in range(self.num_unit)
+            ])
 
     def forward(self, x):
         if self.use_routing:
@@ -68,8 +71,7 @@ class CapsuleLayer(nn.Module):
         u_hat = torch.matmul(weight, x)
 
         # All the routing logits (b_ij in the paper) are initialized to zero.
-        b_ij = Variable(torch.zeros(
-            1, self.in_channel, self.num_unit, 1))
+        b_ij = Variable(torch.zeros(1, self.in_channel, self.num_unit, 1))
         if self.cuda_enabled:
             b_ij = b_ij.cuda()
 
@@ -92,8 +94,7 @@ class CapsuleLayer(nn.Module):
 
             v_j1 = torch.cat([v_j] * self.in_channel, dim=1)
 
-            u_vj1 = torch.matmul(u_hat.transpose(3, 4), v_j1).squeeze(
-                4).mean(dim=0, keepdim=True)
+            u_vj1 = torch.matmul(u_hat.transpose(3, 4), v_j1).squeeze(4).mean(dim=0, keepdim=True)
 
             # Update routing (b_ij)
             b_ij = b_ij + u_vj1
@@ -107,7 +108,8 @@ class CapsuleLayer(nn.Module):
 
         :return: vector output of capsule j
         """
-        unit = [self.conv_units[i](x) for i in range(self.num_unit)]
+        # unit = [self.conv_units[i](x) for i in range(self.num_unit)]
+        unit = [self.conv_units[i](x) for i, l in enumerate(self.conv_units)]
 
         # Stack all unit outputs.
         unit = torch.stack(unit, dim=1)

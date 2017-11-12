@@ -16,6 +16,7 @@ import argparse
 
 import torch
 import torch.optim as optim
+from torch.backends import cudnn
 from torch.autograd import Variable
 
 import utils
@@ -37,9 +38,13 @@ def train(model, data_loader, optimizer, epoch):
     # Switch to train mode
     model.train()
 
+    if args.cuda:
+        # When we wrap a Module in DataParallel for multi-GPUs
+        model = model.module
+
     for batch_idx, (data, target) in enumerate(data_loader):
         target_one_hot = utils.one_hot_encode(
-            target, length=model.digits.num_unit)
+            target, length=args.num_classes)
 
         data, target = Variable(data), Variable(target_one_hot)
 
@@ -79,12 +84,16 @@ def test(model, data_loader):
     # Switch to evaluate mode
     model.eval()
 
+    if args.cuda:
+        # When we wrap a Module in DataParallel for multi-GPUs
+        model = model.module
+
     test_loss = 0
     correct = 0
     for data, target in data_loader:
         target_indices = target
         target_one_hot = utils.one_hot_encode(
-            target_indices, length=model.digits.num_unit)
+            target_indices, length=args.num_classes)
 
         data, target = Variable(data, volatile=True), Variable(target_one_hot)
 
@@ -185,7 +194,11 @@ def main():
                 cuda_enabled=args.cuda)
 
     if args.cuda:
+        print('Utilize GPUs for computation')
+        print('Number of GPU available', torch.cuda.device_count())
         model.cuda()
+        cudnn.benchmark = True
+        model = torch.nn.DataParallel(model)
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
