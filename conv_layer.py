@@ -12,6 +12,10 @@ import torch.nn as nn
 
 
 class ConvLayer(nn.Module):
+    """
+    Conventional Conv2d layer
+    """
+
     def __init__(self, in_channel, out_channel, kernel_size):
         super(ConvLayer, self).__init__()
 
