@@ -10,6 +10,8 @@ A CUDA-enabled PyTorch implementation of CapsNet (Capsule Network) based on this
 
 > A Capsule is a group of neurons whose activity vector represents the instantiation parameters of a specific type of entity such as an object or object part.
 
+You can learn more about Capsule Networks [here](#Learning-Resources).
+
 Codes comes with ample comments and Python docstring.
 
 **Status and Latest Updates:**
@@ -181,24 +183,40 @@ Digits at left are reconstructed images.
      <img src="results/reconstructed_images.png"/>
     </td>
     <td>
+      <p>[WIP] Image for found truth</p>
     </td>
   </tr>
 </table>
 
 ## TODO
-- [DONE] Publish results.
-- [DONE] More testing.
-- Separate training and evaluation into independent command.
-- Jupyter Notebook version.
-- Create a sample to show how we can apply CapsNet to real-world application.
-- Experiment with CapsNet:
+- [x] Publish results.
+- [x] More testing.
+- [ ] Separate training and evaluation into independent command.
+- [ ] Jupyter Notebook version.
+- [ ] Create a sample to show how we can apply CapsNet to real-world application.
+- [ ] Experiment with CapsNet:
     * Try using another dataset.
     * Come out a more creative model structure.
-- Pre-trained model and weights.
-- Add visualization for training and evaluation metrics.
-- [DONE] Implement recontruction loss.
+- [x] Pre-trained model and weights.
+- [ ] Add visualization for training and evaluation metrics.
+- [x] Implement recontruction loss.
+
+*WIP is an acronym for Work-In-Progress*
 
 ## Credits
 
 Referenced these implementations mainly for sanity check:
 1. [TensorFlow implementation by @naturomics](https://github.com/naturomics/CapsNet-Tensorflow)
+
+## Learning Resources
+
+Here's some resources that we think will be helpful if you want to learn more about Capsule Networks:
+
+- Articles and blog posts:
+  - [Understanding Hinton's Capsule Networks. Part I: Intuition.](https://medium.com/@pechyonkin/understanding-hintons-capsule-networks-part-i-intuition-b4b559d1159b)
+  - [Dynamic routing between capsules](https://blog.acolyer.org/2017/11/13/dynamic-routing-between-capsules/)
+  - [What is a CapsNet or Capsule Network?](https://hackernoon.com/what-is-a-capsnet-or-capsule-network-2bfbe48769cc)
+  - [Capsule Networks Are Shaking up AI — Here's How to Use Them](https://hackernoon.com/capsule-networks-are-shaking-up-ai-heres-how-to-use-them-c233a0971952)
+  - [Capsule Networks Explained](https://kndrck.co/posts/capsule_networks_explained/)
+- Videos:
+  - [Capsule Networks: An Improvement to Convolutional Networks](https://www.youtube.com/watch?v=VKoLGnq15RM)
