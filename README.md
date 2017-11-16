@@ -10,7 +10,7 @@ A CUDA-enabled PyTorch implementation of CapsNet (Capsule Network) based on this
 
 > A Capsule is a group of neurons whose activity vector represents the instantiation parameters of a specific type of entity such as an object or object part.
 
-You can learn more about Capsule Networks [here](#Learning-Resources).
+You can learn more about Capsule Networks [here](#learning-resources).
 
 Codes comes with ample comments and Python docstring.
 
