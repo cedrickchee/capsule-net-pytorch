@@ -8,6 +8,7 @@ Author: Cedric Chee
 """
 
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torchvision import transforms, datasets
@@ -69,7 +70,7 @@ def squash(sj, dim=2):
     This implement equation 1 from the paper.
     """
     sj_mag_sq = torch.sum(sj**2, dim, keepdim=True)
-    # ||sj ||
+    # ||sj||
     sj_mag = torch.sqrt(sj_mag_sq)
     v_j = (sj_mag_sq / (1.0 + sj_mag_sq)) * (sj / sj_mag)
     return v_j
@@ -129,3 +130,27 @@ def save_image(image, file_name):
         image_tensor = image.data.cpu() # get Tensor from Variable
 
     vutils.save_image(image_tensor, file_name)
+
+
+def softmax(input, dim=1):
+    """
+    nn.functional.softmax does not take a dimension as of PyTorch version 0.2.0.
+
+    This was created to add dimension support to the existing softmax function
+    for now until PyTorch 0.4.0 stable is release.
+
+    GitHub issue tracking this: https://github.com/pytorch/pytorch/issues/1020
+
+    Arguments:
+        input (Variable): input
+        dim (int): A dimension along which softmax will be computed.
+    """
+    input_size = input.size()
+
+    trans_input = input.transpose(dim, len(input_size) - 1)
+    trans_size = trans_input.size()
+    input_2d = trans_input.contiguous().view(-1, trans_size[-1])
+    soft_max_2d = F.softmax(input_2d)
+    soft_max_nd = soft_max_2d.view(*trans_size)
+
+    return soft_max_nd.transpose(dim, len(input_size) - 1)
