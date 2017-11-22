@@ -35,6 +35,7 @@ class CapsuleLayer(nn.Module):
             Based on the paper, DigitCaps which is capsule layer(s) with
             capsule inputs use a routing algorithm that uses this weight matrix, Wij
             """
+            # weight shape: 1 x 1152 x 10 x 16 x 8
             self.weight = nn.Parameter(torch.randn(1, in_channel, num_unit, unit_size, in_unit))
         else:
             """
@@ -44,33 +45,50 @@ class CapsuleLayer(nn.Module):
 
             This means PrimaryCapsules is composed of several convolutional units.
             """
-            # self.conv_units = [self.conv_unit(u) for u in range(self.num_unit)]
+            # Define 8 convolutional units.
             self.conv_units = nn.ModuleList([
                 nn.Conv2d(self.in_channel, 32, 9, 2) for u in range(self.num_unit)
             ])
 
     def forward(self, x):
         if self.use_routing:
+            # Currently used by DigitCaps layer.
             return self.routing(x)
         else:
+            # Currently used by PrimaryCaps layer.
             return self.no_routing(x)
 
     def routing(self, x):
         """
         Routing algorithm for capsule.
 
+        :input: tensor x of shape [128, 8, 1152]
+
         :return: vector output of capsule j
         """
         batch_size = x.size(0)
 
-        x = x.transpose(1, 2)
-        x = torch.stack([x] * self.num_unit, dim=2).unsqueeze(4)
-        weight = torch.cat([self.weight] * batch_size, dim=0)
+        x = x.transpose(1, 2) # dim 1 and dim 2 are swapped. out tensor shape: [128, 1152, 8]
 
+        # Stacking and adding a dimension to a tensor.
+        # stack ops output shape: [128, 1152, 10, 8]
+        # unsqueeze ops output shape: [128, 1152, 10, 8, 1]
+        x = torch.stack([x] * self.num_unit, dim=2).unsqueeze(4)
+
+        # Convert single weight to batch weight.
+        # [1 x 1152 x 10 x 16 x 8] to: [128, 1152, 10, 16, 8]
+        batch_weight = torch.cat([self.weight] * batch_size, dim=0)
+
+        # u_hat is "prediction vectors" from the capsules in the layer below.
         # Transform inputs by weight matrix.
-        u_hat = torch.matmul(weight, x)
+        # Matrix product of 2 tensors with shape: [128, 1152, 10, 16, 8] x [128, 1152, 10, 8, 1]
+        # u_hat shape: [128, 1152, 10, 16, 1]
+        u_hat = torch.matmul(batch_weight, x)
 
         # All the routing logits (b_ij in the paper) are initialized to zero.
+        # self.in_channel = primary_unit_size = 32 * 6 * 6 = 1152
+        # self.num_unit = num_classes = 10
+        # b_ij shape: [1, 1152, 10, 1]
         b_ij = Variable(torch.zeros(1, self.in_channel, self.num_unit, 1))
         if self.cuda_enabled:
             b_ij = b_ij.cuda()
@@ -83,52 +101,59 @@ class CapsuleLayer(nn.Module):
             # Routing algorithm
 
             # Calculate routing or also known as coupling coefficients (c_ij).
-            c_ij = F.softmax(b_ij)  # Convert routing logits (b_ij) to softmax.
+            # c_ij shape: [1, 1152, 10, 1]
+            c_ij = utils.softmax(b_ij, dim=2)  # Convert routing logits (b_ij) to softmax.
+            # c_ij shape from: [128, 1152, 10, 1] to: [128, 1152, 10, 1, 1]
             c_ij = torch.cat([c_ij] * batch_size, dim=0).unsqueeze(4)
 
             # Implement equation 2 in the paper.
-            # u_hat is weighted inputs
+            # s_j is total input.
+            # u_hat is weighted inputs, prediction ˆuj|i made by capsule i.
+            # c_ij * u_hat shape: [128, 1152, 10, 16, 1]
+            # s_j output shape: [128, 1, 10, 16, 1]
             s_j = (c_ij * u_hat).sum(dim=1, keepdim=True)
 
+            # The vector output of capsule j.
+            # v_j shape: [128, 1, 10, 16, 1]
             v_j = utils.squash(s_j)
 
+            # in_channel is 1152.
+            # v_j1 shape: [128, 1152, 10, 16, 1]
             v_j1 = torch.cat([v_j] * self.in_channel, dim=1)
 
+            # The agreement.
+            # Transpose u_hat with shape [128, 1152, 10, 16, 1] to [128, 1152, 10, 1, 16],
+            # so we can do matrix product u_hat and v_j1.
+            # u_vj1 shape: [1, 1152, 10, 1]
             u_vj1 = torch.matmul(u_hat.transpose(3, 4), v_j1).squeeze(4).mean(dim=0, keepdim=True)
 
-            # Update routing (b_ij)
+            # Update routing (b_ij) by adding the agreement to the initial logit.
             b_ij = b_ij + u_vj1
 
-        return v_j.squeeze(1)
+        return v_j.squeeze(1) # shape: [128, 10, 16, 1]
 
     def no_routing(self, x):
         """
         Get output for each unit.
         A unit has batch, channels, height, width.
+        An example of a unit output shape is [128, 32, 6, 6]
 
         :return: vector output of capsule j
         """
-        # unit = [self.conv_units[i](x) for i in range(self.num_unit)]
+        # Create 8 convolutional unit.
+        # A convolutional unit uses normal convolutional layer with a non-linearity (squash).
         unit = [self.conv_units[i](x) for i, l in enumerate(self.conv_units)]
 
         # Stack all unit outputs.
+        # Stacked of 8 unit output shape: [128, 8, 32, 6, 6]
         unit = torch.stack(unit, dim=1)
 
-        # Flatten
-        unit = unit.view(x.size(0), self.num_unit, -1)
+        batch_size = x.size(0)
 
-        # Return squashed outputs.
+        # Flatten the 32 of 6x6 grid into 1152.
+        # Shape: [128, 8, 1152]
+        unit = unit.view(batch_size, self.num_unit, -1)
+
+        # Add non-linearity
+        # Return squashed outputs of shape: [128, 8, 1152]
         return utils.squash(unit)
-
-    def conv_unit(self, idx):
-        """
-        Create a convolutional unit.
-
-        A convolutional unit uses normal convolutional layer with a nonlinearity (squash).
-        """
-        unit = nn.Conv2d(in_channels=self.in_channel,
-                         out_channels=32,
-                         kernel_size=9,
-                         stride=2)
-        self.add_module("conv_unit" + str(idx), unit)
-        return unit
