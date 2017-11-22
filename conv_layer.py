@@ -28,6 +28,9 @@ class ConvLayer(nn.Module):
 
     def forward(self, x):
         """Forward pass"""
+        # x shape: [128, 1, 28, 28]
+        # out_conv0 shape: [128, 256, 20, 20]
         out_conv0 = self.conv0(x)
+        # out_relu shape: [128, 256, 20, 20]
         out_relu = self.relu(out_conv0)
         return out_relu

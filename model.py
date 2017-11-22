@@ -39,13 +39,13 @@ class Net(nn.Module):
         self.image_channel = 1 # MNIST digit image channel
         self.regularization_scale = regularization_scale
 
-        # Layer 1: Conventional Conv2d layer
+        # Layer 1: Conventional Conv2d layer.
         self.conv1 = ConvLayer(in_channel=num_conv_in_channel,
                                out_channel=num_conv_out_channel,
                                kernel_size=9)
 
         # PrimaryCaps
-        # Layer 2: Conv2D layer with `squash` activation
+        # Layer 2: Conv2D layer with `squash` activation.
         self.primary = CapsuleLayer(in_unit=0,
                                     in_channel=num_conv_out_channel,
                                     num_unit=num_primary_unit,
@@ -81,8 +81,14 @@ class Net(nn.Module):
         """
         Defines the computation performed at every forward pass.
         """
+        # x shape: [128, 1, 28, 28]. 128 is for the batch size.
+        # out_conv1 shape: [128, 256, 20, 20]
         out_conv1 = self.conv1(x)
+        # out_primary_caps shape: [128, 8, 1152].
+        # Total PrimaryCapsules has [32 × 6 × 6 = 1152] capsule outputs.
         out_primary_caps = self.primary(out_conv1)
+        # out_digit_caps shape: [128, 10, 16, 1]
+        # batch size: 128, 10 digit class, 16D capsule per digit class.
         out_digit_caps = self.digits(out_primary_caps)
         return out_digit_caps
 
