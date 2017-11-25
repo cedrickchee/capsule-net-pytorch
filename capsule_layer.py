@@ -10,7 +10,6 @@ Author: Cedric Chee
 import torch
 import torch.nn as nn
 from torch.autograd import Variable
-import torch.nn.functional as F
 import utils
 
 
@@ -35,7 +34,9 @@ class CapsuleLayer(nn.Module):
             Based on the paper, DigitCaps which is capsule layer(s) with
             capsule inputs use a routing algorithm that uses this weight matrix, Wij
             """
-            # weight shape: 1 x 1152 x 10 x 16 x 8
+            # weight shape:
+            # [1 x primary_unit_size x num_classes x output_unit_size x num_primary_unit]
+            # == [1 x 1152 x 10 x 16 x 8]
             self.weight = nn.Parameter(torch.randn(1, in_channel, num_unit, unit_size, in_unit))
         else:
             """
@@ -107,15 +108,19 @@ class CapsuleLayer(nn.Module):
             c_ij = torch.cat([c_ij] * batch_size, dim=0).unsqueeze(4)
 
             # Implement equation 2 in the paper.
-            # s_j is total input.
+            # s_j is total input to a capsule, is a weigthed sum over all "prediction vectors".
             # u_hat is weighted inputs, prediction ˆuj|i made by capsule i.
             # c_ij * u_hat shape: [128, 1152, 10, 16, 1]
-            # s_j output shape: [128, 1, 10, 16, 1]
+            # s_j output shape: [batch_size=128, 1, 10, 16, 1]
+            # Sum of Primary Capsules outputs, 1152D becomes 1D.
             s_j = (c_ij * u_hat).sum(dim=1, keepdim=True)
 
-            # The vector output of capsule j.
-            # v_j shape: [128, 1, 10, 16, 1]
-            v_j = utils.squash(s_j)
+            # Squash the vector output of capsule j.
+            # v_j shape: [batch_size, weighted sum of PrimaryCaps output,
+            #             num_classes, output_unit_size from u_hat, 1]
+            # == [128, 1, 10, 16, 1]
+            # So, the length of the output vector of a capsule is 16, which is in dim 3.
+            v_j = utils.squash(s_j, dim=3)
 
             # in_channel is 1152.
             # v_j1 shape: [128, 1152, 10, 16, 1]
@@ -156,4 +161,4 @@ class CapsuleLayer(nn.Module):
 
         # Add non-linearity
         # Return squashed outputs of shape: [128, 8, 1152]
-        return utils.squash(unit)
+        return utils.squash(unit, dim=2) # dim 2 is the third dim (1152D array) in our tensor
