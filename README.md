@@ -12,7 +12,11 @@ A CUDA-enabled PyTorch implementation of CapsNet (Capsule Network) based on this
 
 You can learn more about Capsule Networks [here](#learning-resources).
 
-Codes comes with ample comments and Python docstring.
+**Why another CapsNet implementation?**
+
+I wanted a decent PyTorch implementation of CapsNet and I couldn't find one at the point when I started. The goal of this implementation is focus to help newcomers learn and understand the CapsNet architecture and the idea of Capsules. The implementation is **NOT** focus on rigorous correctness of the results. In addition, the codes are not optimized for speed. To help us read and understand the codes easier, the codes comes with ample comments and the Python classes and functions are documented with Python docstring.
+
+I will try my best to check and fix issues reported. Contributions are highly welcomed. If you find any bugs or errors in the codes, please do not hesitate to open an issue or a pull request. Thank you.
 
 **Status and Latest Updates:**
 
@@ -30,6 +34,8 @@ The model was trained on the standard [MNIST](http://yann.lecun.com/exdb/mnist/)
     - Tested with version 0.2.0.post4.
     - Code will not run with version 0.1.2 due to `keepdim` not available in this version.
 - TorchVision
+- tensorboardX
+- tqdm
 
 ## Usage
 
@@ -75,7 +81,6 @@ You can download the pre-trained model from my [Google Drive](https://drive.goog
 | Learning rate | 0.01 | --lr 0.01 |
 | Training batch size | 128 | --batch-size 128 |
 | Testing batch size | 128 | --test-batch-size 128 |
-| Loss threshold | 0.001 | --loss-threshold 0.001 |
 | Log interval | 10 | --log-interval 10 |
 | Disables CUDA training | false | --no-cuda |
 | Num. of channels produced by the convolution | 256 | --num-conv-out-channel 256 |
@@ -85,6 +90,7 @@ You can download the pre-trained model from my [Google Drive](https://drive.goog
 | Num. of digit classes | 10 | --num-classes 10 |
 | Output unit size | 16 | --output-unit-size 16 |
 | Num. routing iteration | 3 | --num-routing 3 |
+| Use reconstruction loss | true | --use-reconstruction-loss |
 | Regularization coefficient for reconstruction loss | 0.0005 | --regularization-scale 0.0005 |
 
 ## Results
@@ -96,10 +102,10 @@ CapsNet classification test error on MNIST. The MNIST average and standard devia
 [WIP] The results can be reproduced by running the following commands.
 
 ```bash
- python main.py --num-routing 1 --regularization-scale 0.0      #CapsNet-v1
- python main.py --num-routing 1 --regularization-scale 0.0005   #CapsNet-v2
- python main.py --num-routing 3 --regularization-scale 0.0      #CapsNet-v3
- python main.py --num-routing 3 --regularization-scale 0.0005   #CapsNet-v4
+ python main.py --num-routing 1 --use-reconstruction-loss no --regularization-scale 0.0       #CapsNet-v1
+ python main.py --num-routing 1 --use-reconstruction-loss yes --regularization-scale 0.0005   #CapsNet-v2
+ python main.py --num-routing 3 --use-reconstruction-loss no --regularization-scale 0.0       #CapsNet-v3
+ python main.py --num-routing 3 --use-reconstruction-loss yes --regularization-scale 0.0005   #CapsNet-v4
 ```
 
 Method | Routing | Reconstruction | MNIST (%) | *Paper*
@@ -183,7 +189,7 @@ Digits at left are reconstructed images.
      <img src="results/reconstructed_images.png"/>
     </td>
     <td>
-      <p>[WIP] Image for found truth</p>
+      <p>[WIP] Ground truth image from paper</p>
     </td>
   </tr>
 </table>
@@ -191,15 +197,19 @@ Digits at left are reconstructed images.
 ## TODO
 - [x] Publish results.
 - [x] More testing.
-- [ ] Separate training and evaluation into independent command.
+- [ ] Command to test a pre-trained model.
 - [ ] Jupyter Notebook version.
 - [ ] Create a sample to show how we can apply CapsNet to real-world application.
 - [ ] Experiment with CapsNet:
     * Try using another dataset.
     * Come out a more creative model structure.
 - [x] Pre-trained model and weights.
-- [ ] Add visualization for training and evaluation metrics.
+- [x] Add visualization for training and evaluation metrics.
 - [x] Implement recontruction loss.
+- [x] Check algorithm for correctness.
+- [ ] Update results from TensorBoard after making improvements and bug fixes.
+- [ ] Publish updated pre-trained model weights.
+- [ ] Log the reconstructed images using TensorBoard.
 
 *WIP is an acronym for Work-In-Progress*
 
@@ -220,3 +230,4 @@ Here's some resources that we think will be helpful if you want to learn more ab
   - [Capsule Networks Explained](https://kndrck.co/posts/capsule_networks_explained/)
 - Videos:
   - [Capsule Networks: An Improvement to Convolutional Networks](https://www.youtube.com/watch?v=VKoLGnq15RM)
+  - [Capsule Networks (CapsNets) – Tutorial](https://www.youtube.com/watch?v=pPN8d0E3900)
