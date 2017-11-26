@@ -20,6 +20,7 @@ import torch
 import torch.optim as optim
 from torch.backends import cudnn
 from torch.autograd import Variable
+import torchvision.utils as vutils
 from tensorboardX import SummaryWriter
 from tqdm import tqdm
 
@@ -92,8 +93,6 @@ def train(model, data_loader, optimizer, epoch, writer):
             tag = tag.replace('.', '/')
             writer.add_histogram(tag, utils.to_np(value), global_step)
             writer.add_histogram(tag + '/grad', utils.to_np(value.grad), global_step)
-
-        # TODO: 3) Log the images
 
         # Print losses
         if batch_idx % args.log_interval == 0:
@@ -169,19 +168,43 @@ def test(model, data_loader, num_train_batches, epoch, writer):
         recon_loss += r_loss.data[0]
 
         # Count number of correct predictions
+        # v_magnitude shape: [128, 10, 1, 1]
         v_magnitude = torch.sqrt((output**2).sum(dim=2, keepdim=True))
+        # pred shape: [128, 1, 1, 1]
         pred = v_magnitude.data.max(1, keepdim=True)[1].cpu()
         correct += pred.eq(target_indices.view_as(pred)).sum()
+
+    # Get the reconstructed images of the last batch
+    if args.use_reconstruction_loss:
+        reconstruction = model.decoder(output, target)
+        image_width = 28 # MNIST digit image width
+        image_height = 28 # MNIST digit image height
+        image_channel = 1 # MNIST digit image channel
+        recon_img = reconstruction.view(-1, image_channel, image_width, image_height)
+        assert recon_img.size() == torch.Size([batch_size, 1, 28, 28])
+
+        # Save the image into file system
+        utils.save_image(recon_img, 'results/recons_image_test_{}_{}.png'.format(epoch, global_step))
+        utils.save_image(data, 'results/original_image_test_{}_{}.png'.format(epoch, global_step))
+
+        # Add and visualize the image in TensorBoard
+        recon_img = vutils.make_grid(recon_img.data, normalize=True, scale_each=True)
+        original_img = vutils.make_grid(data.data, normalize=True, scale_each=True)
+        writer.add_image('test/recons-image-{}-{}'.format(epoch, global_step), recon_img, global_step)
+        writer.add_image('test/original-image-{}-{}'.format(epoch, global_step), original_img, global_step)
 
     # Log test losses
     loss /= num_batches
     margin_loss /= num_batches
     recon_loss /= num_batches
 
+    # Log test accuracies
     num_test_data = len(data_loader.dataset)
     accuracy = correct / num_test_data
     accuracy_percentage = 100. * accuracy
 
+    # TensorBoard logging
+    # 1) Log the scalar values
     writer.add_scalar('test/total_loss', loss, global_step)
     writer.add_scalar('test/margin_loss', margin_loss, global_step)
     if args.use_reconstruction_loss:
