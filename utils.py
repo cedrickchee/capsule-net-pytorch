@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 from torch.autograd import Variable
 from torchvision import transforms, datasets
 import torchvision.utils as vutils
+import argparse
 
 
 # Normalize MNIST dataset.
@@ -48,8 +49,10 @@ def load_mnist(args):
               'pin_memory': True} if args.cuda else {}
 
     print('===> Loading training datasets')
+    # MNIST dataset
     training_set = datasets.MNIST(
         './data', train=True, download=True, transform=data_transform)
+    # Input pipeline
     training_data_loader = DataLoader(
         training_set, batch_size=args.batch_size, shuffle=True, **kwargs)
 
@@ -154,3 +157,56 @@ def softmax(input, dim=1):
     soft_max_nd = soft_max_2d.view(*trans_size)
 
     return soft_max_nd.transpose(dim, len(input_size) - 1)
+
+
+def accuracy(output, target, cuda_enabled=True):
+    """
+    Compute accuracy.
+
+    Args:
+        output: [batch_size, 10, 16, 1] The output from DigitCaps layer.
+        target: [batch_size] Labels for dataset.
+
+    Returns:
+        accuracy (float): The accuracy for a batch.
+    """
+    batch_size = target.size(0)
+
+    v_length = torch.sqrt((output**2).sum(dim=2, keepdim=True))
+    softmax_v = softmax(v_length, dim=1)
+    assert softmax_v.size() == torch.Size([batch_size, 10, 1, 1])
+
+    _, max_index = softmax_v.max(dim=1)
+    assert max_index.size() == torch.Size([batch_size, 1, 1])
+
+    pred = max_index.squeeze() #max_index.view(batch_size)
+    assert pred.size() == torch.Size([batch_size])
+
+    if cuda_enabled:
+        target = target.cuda()
+        pred = pred.cuda()
+
+    correct_pred = torch.eq(target, pred.data) # tensor
+    # correct_pred_sum = correct_pred.sum() # scalar. e.g: 6 correct out of 128 images.
+    acc = correct_pred.float().mean() # e.g: 6 / 128 = 0.046875
+
+    return acc
+
+
+def to_np(param):
+    """
+    Convert values of the model parameters to numpy.array.
+    """
+    return param.clone().cpu().data.numpy()
+
+
+def str2bool(v):
+    """
+    Parsing boolean values with argparse.
+    """
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
