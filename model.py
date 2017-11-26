@@ -37,6 +37,9 @@ class Net(nn.Module):
         self.image_width = 28 # MNIST digit image width
         self.image_height = 28 # MNIST digit image height
         self.image_channel = 1 # MNIST digit image channel
+
+        # Also known as lambda reconstruction. Default value is 0.0005.
+        # We use sum of squared errors (SSE) similar to paper.
         self.regularization_scale = regularization_scale
 
         # Layer 1: Conventional Conv2d layer.
@@ -93,32 +96,57 @@ class Net(nn.Module):
         return out_digit_caps
 
     def loss(self, images, out_digit_caps, target, size_average=True):
-        """Custom loss function"""
-        # out_digit_caps is the output from DigitCaps layer during the forward pass.
-        # out_digit_caps is the input to the loss function.
-        m_loss = self.margin_loss(out_digit_caps, target, size_average)
+        """Custom loss function
+
+        Args:
+            images: [batch_size, 1, 28, 28] MNIST samples.
+            out_digit_caps: [batch_size, 10, 16, 1] The output from DigitCaps layer.
+            target: [batch_size, 10] One-hot MNIST labels.
+            size_average: A boolean to enable mean loss (average loss over batch size).
+
+        Returns:
+            total_loss: A scalar Variable of total loss.
+            m_loss: A scalar of margin loss.
+            recon_loss: A scalar of reconstruction loss.
+        """
+        recon_loss = 0
+        m_loss = self.margin_loss(out_digit_caps, target)
+        if size_average:
+            m_loss = m_loss.mean()
+
         total_loss = m_loss
 
         if self.use_reconstruction_loss:
             # In order to keep in line with the paper,
             # they scale down the reconstruction loss by 0.0005
             # so that it does not dominate the margin loss.
-            recon_loss = self.reconstruction_loss(images, out_digit_caps, size_average)
+            recon_loss = self.reconstruction_loss(images, out_digit_caps)
+
+            # Mean squared error
+            if size_average:
+                recon_loss = recon_loss.mean()
+
+            # Scalar Variable
             total_loss = m_loss + recon_loss * self.regularization_scale
 
-        return total_loss
+        return total_loss, m_loss, recon_loss
 
-    def margin_loss(self, input, target, size_average=True):
+    def margin_loss(self, input, target):
         """
         Class loss
 
-        Implement section 3 'Margin loss for digit existence' in the paper.
+        Implement equation 4 in section 3 'Margin loss for digit existence' in the paper.
+
+        Args:
+            input: [batch_size, 10, 16, 1] The output from DigitCaps layer.
+            target: target: [batch_size, 10] One-hot MNIST labels.
+
+        Returns:
+            l_c: A scalar of class loss or also know as margin loss.
         """
         batch_size = input.size(0)
 
-        # Implement equation 4 in the paper.
-
-        # ||vc||
+        # ||vc|| also known as norm.
         v_c = torch.sqrt((input**2).sum(dim=2, keepdim=True))
 
         # Calculate left and right max() terms.
@@ -135,18 +163,22 @@ class Net(nn.Module):
         l_c = t_c * max_left + loss_lambda * (1.0 - t_c) * max_right
         l_c = l_c.sum(dim=1)
 
-        if size_average:
-            l_c = l_c.mean()
-
         return l_c
 
-    def reconstruction_loss(self, images, input, size_average=True):
+    def reconstruction_loss(self, images, input):
         """
         Implement section 4.1 'Reconstruction as a regularization method' in the paper.
         Implement Decoder structure in Figure 2 to reconstruct a digit from
         the DigitCaps layer representation.
 
         Based on naturomics's implementation.
+
+        Args:
+            images: [batch_size, 1, 28, 28] MNIST samples.
+            input: [batch_size, 10, 16, 1] The output from DigitCaps layer.
+
+        Returns:
+            recon_error: A scalar Variable of reconstruction loss.
         """
 
         """
@@ -179,10 +211,7 @@ class Net(nn.Module):
         error = (recon_img - images).view(recon_img.size(0), -1)
         squared = error**2
 
+        # Scalar Variable
         recon_error = torch.sum(squared, dim=1)
-
-        # Mean squared error
-        if size_average:
-            recon_error = recon_error.mean()
 
         return recon_error
