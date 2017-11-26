@@ -4,6 +4,38 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2017-11-27
+### Added
+- Decoder network PyTorch module.
+- Reconstruct image with Decoder network during testing.
+- Save the original and recontructed images into file system.
+- Log the original and reconstructed images using TensorBoard.
+
+### Changed
+- Refactor reconstruction loss function and decoder network.
+- Remove image reconstruction from training.
+
+## [0.2.0] - 2017-11-26
+### Added
+- New dependencies for TensorBoard and tqdm.
+- Logging losses and accuracies with TensorBoard.
+- New utils functions for:
+    - computing accuracy
+    - convert values of the model parameters to numpy.array.
+    - parsing boolean values with argparse
+- Softmax function that takes a dimension.
+- More detailed code comments.
+- Show margin loss and reconstruction loss in logs.
+- Show accuracy in train logs.
+
+### Changed
+- Refactor loss functions.
+- Clean codes.
+
+### Fixed
+- Runtime error during pip install requirements.txt
+- Bug in routing algorithm.
+
 ## [0.1.0] - 2017-11-12
 ### Added
 - Implemented reconstruction loss.
@@ -30,3 +62,5 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 [Unreleased]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v1.0.0...HEAD
 [0.1.0]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v0.0.1...v0.1.0
+[0.2.0]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v0.1.0...v0.2.0
+[0.3.0]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v0.2.0...v0.3.0
