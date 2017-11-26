@@ -87,7 +87,11 @@ def mask(out_digit_caps, cuda_enabled=True):
     a) during training, mask all but the capsule (1x16 vector) which match the ground-truth.
     b) during testing, mask all but the longest capsule (1x16 vector).
 
-    :param out_digit_caps: tensor output of Digit Capsule layer
+    Args:
+        out_digit_caps: [batch_size, 10, 16] Tensor output of `DigitCaps` layer.
+
+    Returns:
+        masked: [batch_size, 10, 16, 1] The masked capsules tensors.
     """
     # a) Get capsule outputs lengths, ||v_c||
     v_length = torch.sqrt((out_digit_caps**2).sum(dim=2))
@@ -102,7 +106,7 @@ def mask(out_digit_caps, cuda_enabled=True):
     # It's not easy to understand the indexing process with max_index
     # as we are 3D animal.
     batch_size = out_digit_caps.size(0)
-    masked_v = [None] * batch_size
+    masked_v = [None] * batch_size # Python list
     for batch_ix in range(batch_size):
         # Batch sample
         sample = out_digit_caps[batch_ix]

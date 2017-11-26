@@ -13,7 +13,7 @@ from torch.autograd import Variable
 
 from conv_layer import ConvLayer
 from capsule_layer import CapsuleLayer
-import utils
+from decoder import Decoder
 
 
 class Net(nn.Module):
@@ -69,16 +69,7 @@ class Net(nn.Module):
 
         # Reconstruction network
         if use_reconstruction_loss:
-            # The output of the digit capsule is fed into a decoder consisting of
-            # 3 fully connected layers that model the pixel intensities.
-            fc1_output_size = 512
-            fc2_output_size = 1024
-            self.fc1 = nn.Linear(num_classes * output_unit_size, fc1_output_size)
-            self.fc2 = nn.Linear(fc1_output_size, fc2_output_size)
-            self.fc3 = nn.Linear(fc2_output_size, 784)
-            # Activation functions
-            self.relu = nn.ReLU(inplace=True)
-            self.sigmoid = nn.Sigmoid()
+            self.decoder = Decoder(num_classes, output_unit_size, cuda_enabled)
 
     def forward(self, x):
         """
@@ -95,13 +86,13 @@ class Net(nn.Module):
         out_digit_caps = self.digits(out_primary_caps)
         return out_digit_caps
 
-    def loss(self, images, out_digit_caps, target, size_average=True):
+    def loss(self, image, out_digit_caps, target, size_average=True):
         """Custom loss function
 
         Args:
-            images: [batch_size, 1, 28, 28] MNIST samples.
-            out_digit_caps: [batch_size, 10, 16, 1] The output from DigitCaps layer.
-            target: [batch_size, 10] One-hot MNIST labels.
+            image: [batch_size, 1, 28, 28] MNIST samples.
+            out_digit_caps: [batch_size, 10, 16, 1] The output from `DigitCaps` layer.
+            target: [batch_size, 10] One-hot MNIST dataset labels.
             size_average: A boolean to enable mean loss (average loss over batch size).
 
         Returns:
@@ -117,16 +108,17 @@ class Net(nn.Module):
         total_loss = m_loss
 
         if self.use_reconstruction_loss:
-            # In order to keep in line with the paper,
-            # they scale down the reconstruction loss by 0.0005
-            # so that it does not dominate the margin loss.
-            recon_loss = self.reconstruction_loss(images, out_digit_caps)
+            # Reconstruct the image from the Decoder network
+            reconstruction = self.decoder(out_digit_caps, target)
+            recon_loss = self.reconstruction_loss(reconstruction, image)
 
             # Mean squared error
             if size_average:
                 recon_loss = recon_loss.mean()
 
-            # Scalar Variable
+            # In order to keep in line with the paper,
+            # they scale down the reconstruction loss by 0.0005
+            # so that it does not dominate the margin loss.
             total_loss = m_loss + recon_loss * self.regularization_scale
 
         return total_loss, m_loss, recon_loss
@@ -138,7 +130,7 @@ class Net(nn.Module):
         Implement equation 4 in section 3 'Margin loss for digit existence' in the paper.
 
         Args:
-            input: [batch_size, 10, 16, 1] The output from DigitCaps layer.
+            input: [batch_size, 10, 16, 1] The output from `DigitCaps` layer.
             target: target: [batch_size, 10] One-hot MNIST labels.
 
         Returns:
@@ -165,53 +157,32 @@ class Net(nn.Module):
 
         return l_c
 
-    def reconstruction_loss(self, images, input):
+    def reconstruction_loss(self, reconstruction, image):
         """
+        The reconstruction loss is the sum of squared differences between
+        the reconstructed image (outputs of the logistic units) and
+        the original image (input image).
+
         Implement section 4.1 'Reconstruction as a regularization method' in the paper.
-        Implement Decoder structure in Figure 2 to reconstruct a digit from
-        the DigitCaps layer representation.
 
         Based on naturomics's implementation.
 
         Args:
-            images: [batch_size, 1, 28, 28] MNIST samples.
-            input: [batch_size, 10, 16, 1] The output from DigitCaps layer.
+            reconstruction: [batch_size, 784] Decoder outputs of reconstructed image tensor.
+            image: [batch_size, 1, 28, 28] MNIST samples.
 
         Returns:
             recon_error: A scalar Variable of reconstruction loss.
         """
 
-        """
-        First, do masking.
-        """
-        # Method 1: mask with y.
-        # Note: we have not implement method 2 which is masking with true label.
-        masked_caps = utils.mask(input, self.cuda_enabled)
-
-        """
-        Second, reconstruct the images with 3 Fully Connected layers.
-        """
-        vector_j = masked_caps.view(input.size(0), -1) # reshape the masked_caps tensor
-        fc1_out = self.relu(self.fc1(vector_j))
-        fc2_out = self.relu(self.fc2(fc1_out))
-        decoded = self.sigmoid(self.fc3(fc2_out))
-
-        recon_img = decoded.view(-1, self.image_channel, self.image_height, self.image_width)
-
-        """
-        Save reconstructed images.
-        """
-        utils.save_image(recon_img, 'results/reconstructed_images.png')
-
-        """
-        Calculate reconstruction loss.
-        """
-        # Minimize the sum of squared differences between the
-        # reconstructed image (outputs of the logistic units) and the input image (origin).
-        error = (recon_img - images).view(recon_img.size(0), -1)
-        squared = error**2
+        # Calculate reconstruction loss.
+        batch_size = image.size(0) # or another way recon_img.size(0)
+        # error = (recon_img - image).view(batch_size, -1)
+        image = image.view(batch_size, -1) # flatten 28x28 by reshaping to [batch_size, 784]
+        error = reconstruction - image
+        squared_error = error**2
 
         # Scalar Variable
-        recon_error = torch.sum(squared, dim=1)
+        recon_error = torch.sum(squared_error, dim=1)
 
         return recon_error
