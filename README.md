@@ -209,7 +209,7 @@ Digits at left are reconstructed images.
 - [x] Check algorithm for correctness.
 - [ ] Update results from TensorBoard after making improvements and bug fixes.
 - [ ] Publish updated pre-trained model weights.
-- [ ] Log the reconstructed images using TensorBoard.
+- [x] Log the original and reconstructed images using TensorBoard.
 
 *WIP is an acronym for Work-In-Progress*
 
