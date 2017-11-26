@@ -5,35 +5,43 @@ https://arxiv.org/abs/1710.09829
 
 Usage:
     python main.py
-    python main.py --epochs 50
-    python main.py --epochs 50 --loss-threshold 0.0001
+    python main.py --epochs 30
+    python main.py --epochs 30 --num-routing 1
 
 Author: Cedric Chee
 """
 
 from __future__ import print_function
 import argparse
+from timeit import default_timer as timer
+import os
 
 import torch
 import torch.optim as optim
 from torch.backends import cudnn
 from torch.autograd import Variable
+from tensorboardX import SummaryWriter
+from tqdm import tqdm
 
 import utils
 from model import Net
 
 
-def train(model, data_loader, optimizer, epoch):
-    """Train CapsuleNet model on training set
-    :param model: The CapsuleNet model
-    :param data_loader: An interator over the dataset. It combines a dataset and a sampler
-    :optimizer: Optimization algorithm
-    :epoch: Current epoch
-    :return: Loss
+def train(model, data_loader, optimizer, epoch, writer):
+    """
+    Train CapsuleNet model on training set
+
+    Args:
+        model: The CapsuleNet model.
+        data_loader: An interator over the dataset. It combines a dataset and a sampler.
+        optimizer: Optimization algorithm.
+        epoch: Current epoch.
     """
     print('===> Training mode')
 
-    last_loss = None
+    num_batches = len(data_loader) # iteration per epoch. e.g: 469
+    total_step = args.epochs * num_batches
+    epoch_tot_acc = 0
 
     # Switch to train mode
     model.train()
@@ -42,9 +50,15 @@ def train(model, data_loader, optimizer, epoch):
         # When we wrap a Module in DataParallel for multi-GPUs
         model = model.module
 
-    for batch_idx, (data, target) in enumerate(data_loader):
-        target_one_hot = utils.one_hot_encode(
-            target, length=args.num_classes)
+    start_time = timer()
+
+    for batch_idx, (data, target) in enumerate(tqdm(data_loader, unit='batch')):
+        batch_size = data.size(0)
+        global_step = batch_idx + (epoch * num_batches) - num_batches
+
+        labels = target
+        target_one_hot = utils.one_hot_encode(target, length=args.num_classes)
+        assert target_one_hot.size() == torch.Size([batch_size, 10])
 
         data, target = Variable(data), Variable(target_one_hot)
 
@@ -52,32 +66,67 @@ def train(model, data_loader, optimizer, epoch):
             data = data.cuda()
             target = target.cuda()
 
+        # Train step - forward, backward and optimize
         optimizer.zero_grad()
         output = model(data) # output from DigitCaps (out_digit_caps)
-        loss = model.loss(data, output, target) # pass in data for image reconstruction
+        loss, margin_loss, recon_loss = model.loss(data, output, target)
         loss.backward()
-        last_loss = loss.data[0]
         optimizer.step()
 
+        # Calculate accuracy for each step and average accuracy for each epoch
+        acc = utils.accuracy(output, labels, args.cuda)
+        epoch_tot_acc += acc
+        epoch_avg_acc = epoch_tot_acc / (batch_idx + 1)
+
+        # TensorBoard logging
+        # 1) Log the scalar values
+        writer.add_scalar('train/total_loss', loss.data[0], global_step)
+        writer.add_scalar('train/margin_loss', margin_loss.data[0], global_step)
+        if args.use_reconstruction_loss:
+            writer.add_scalar('train/reconstruction_loss', recon_loss.data[0], global_step)
+        writer.add_scalar('train/batch_accuracy', acc, global_step)
+        writer.add_scalar('train/accuracy', epoch_avg_acc, global_step)
+
+        # 2) Log values and gradients of the parameters (histogram)
+        for tag, value in model.named_parameters():
+            tag = tag.replace('.', '/')
+            writer.add_histogram(tag, utils.to_np(value), global_step)
+            writer.add_histogram(tag + '/grad', utils.to_np(value.grad), global_step)
+
+        # TODO: 3) Log the images
+
+        # Print losses
         if batch_idx % args.log_interval == 0:
-            mesg = 'Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+            template = 'Epoch {}/{}, ' \
+                    'Step {}/{}: ' \
+                    '[Total loss: {:.6f},' \
+                    '\tMargin loss: {:.6f},' \
+                    '\tReconstruction loss: {:.6f},' \
+                    '\tBatch accuracy: {:.6f},' \
+                    '\tAccuracy: {:.6f}]'
+            tqdm.write(template.format(
                 epoch,
-                batch_idx * len(data),
-                len(data_loader.dataset),
-                100. * batch_idx / len(data_loader),
-                loss.data[0])
+                args.epochs,
+                global_step,
+                total_step,
+                loss.data[0],
+                margin_loss.data[0],
+                recon_loss.data[0] if args.use_reconstruction_loss else 0,
+                acc,
+                epoch_avg_acc))
 
-            print(mesg)
-
-        if last_loss < args.loss_threshold:
-            # Stop training early
-            break
-
-    return last_loss
+    # Print time elapsed for an epoch
+    end_time = timer()
+    print('Time elapsed for epoch {}: {:.0f}s.'.format(epoch, end_time - start_time))
 
 
-def test(model, data_loader):
-    """Evaluate model on validation set
+def test(model, data_loader, num_train_batches, epoch, writer):
+    """
+    Evaluate model on validation set
+
+    Args:
+        model: The CapsuleNet model.
+        data_loader: An interator over the dataset. It combines a dataset and a sampler.
     """
     print('===> Evaluate mode')
 
@@ -88,12 +137,21 @@ def test(model, data_loader):
         # When we wrap a Module in DataParallel for multi-GPUs
         model = model.module
 
-    test_loss = 0
+    loss = 0
+    margin_loss = 0
+    recon_loss = 0
+
     correct = 0
+
+    num_batches = len(data_loader)
+
+    global_step = epoch * num_train_batches + num_train_batches
+
     for data, target in data_loader:
+        batch_size = data.size(0)
         target_indices = target
-        target_one_hot = utils.one_hot_encode(
-            target_indices, length=args.num_classes)
+        target_one_hot = utils.one_hot_encode(target_indices, length=args.num_classes)
+        assert target_one_hot.size() == torch.Size([batch_size, 10])
 
         data, target = Variable(data, volatile=True), Variable(target_one_hot)
 
@@ -101,24 +159,44 @@ def test(model, data_loader):
             data = data.cuda()
             target = target.cuda()
 
+        # Output predictions
         output = model(data) # output from DigitCaps (out_digit_caps)
 
-        # sum up batch loss
-        test_loss += model.loss(data, output, target, size_average=False).data[0] # pass in data for image reconstruction
+        # Sum up batch loss
+        t_loss, m_loss, r_loss = model.loss(data, output, target, size_average=False)
+        loss += t_loss.data[0]
+        margin_loss += m_loss.data[0]
+        recon_loss += r_loss.data[0]
 
-        # evaluate
-        v_magnitud = torch.sqrt((output**2).sum(dim=2, keepdim=True))
-        pred = v_magnitud.data.max(1, keepdim=True)[1].cpu()
+        # Count number of correct predictions
+        v_magnitude = torch.sqrt((output**2).sum(dim=2, keepdim=True))
+        pred = v_magnitude.data.max(1, keepdim=True)[1].cpu()
         correct += pred.eq(target_indices.view_as(pred)).sum()
 
-    test_loss /= len(data_loader.dataset)
+    # Log test losses
+    loss /= num_batches
+    margin_loss /= num_batches
+    recon_loss /= num_batches
 
-    mesg = 'Test set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)'.format(
-        test_loss,
-        correct,
-        len(data_loader.dataset),
-        100. * correct / len(data_loader.dataset))
-    print(mesg)
+    num_test_data = len(data_loader.dataset)
+    accuracy = correct / num_test_data
+    accuracy_percentage = 100. * accuracy
+
+    writer.add_scalar('test/total_loss', loss, global_step)
+    writer.add_scalar('test/margin_loss', margin_loss, global_step)
+    if args.use_reconstruction_loss:
+        writer.add_scalar('test/reconstruction_loss', recon_loss, global_step)
+    writer.add_scalar('test/accuracy', accuracy, global_step)
+
+    # Print test losses and accuracy
+    print('Test: [Loss: {:.6f},' \
+        '\tMargin loss: {:.6f},' \
+        '\tReconstruction loss: {:.6f}]'.format(
+            loss,
+            margin_loss,
+            recon_loss if args.use_reconstruction_loss else 0))
+    print('Test Accuracy: {}/{} ({:.0f}%)\n'.format(
+        correct, num_test_data, accuracy_percentage))
 
 
 def main():
@@ -137,8 +215,6 @@ def main():
                         help='training batch size. default=128')
     parser.add_argument('--test-batch-size', type=int,
                         default=128, help='testing batch size. default=128')
-    parser.add_argument('--loss-threshold', type=float, default=0.0001,
-                        help='stop training if loss goes below this threshold. default=0.0001')
     parser.add_argument('--log-interval', type=int, default=10,
                         help='how many batches to wait before logging training status. default=10')
     parser.add_argument('--no-cuda', action='store_true', default=False,
@@ -161,7 +237,7 @@ def main():
                         default=16, help='output unit size. default=16')
     parser.add_argument('--num-routing', type=int,
                         default=3, help='number of routing iteration. default=3')
-    parser.add_argument('--use-reconstruction-loss', action='store_true', default=True,
+    parser.add_argument('--use-reconstruction-loss', type=utils.str2bool, nargs='?', default=True,
                         help='use an additional reconstruction loss. default=True')
     parser.add_argument('--regularization-scale', type=float, default=0.0005,
                         help='regularization coefficient for reconstruction loss. default=0.0005')
@@ -173,6 +249,7 @@ def main():
     # Check GPU or CUDA is available
     args.cuda = not args.no_cuda and torch.cuda.is_available()
 
+    # Get reproducible results by manually seed the random number generator
     torch.manual_seed(args.seed)
     if args.cuda:
         torch.cuda.manual_seed(args.seed)
@@ -200,20 +277,43 @@ def main():
         cudnn.benchmark = True
         model = torch.nn.DataParallel(model)
 
+    # Print the model architecture and parameters
+    print('Model architectures:\n{}\n'.format(model))
+
+    print('Parameters and size:')
+    for name, param in model.named_parameters():
+        print('{}: {}'.format(name, list(param.size())))
+
+    # CapsNet has 8.2M parameters and 6.8M parameters without the reconstruction subnet.
+    num_params = sum([param.nelement() for param in model.parameters()])
+
+    # The coupling coefficients c_ij are not included in the parameter list,
+    # we need to add them manually, which is 1152 * 10 = 11520.
+    print('\nTotal number of parameters: {}\n'.format(num_params + 11520))
+
+    # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+    # Make model checkpoint directory
+    if not os.path.exists('results/trained_model'):
+        os.makedirs('results/trained_model')
+
+    # Set the logger
+    writer = SummaryWriter()
 
     # Train and test
     for epoch in range(1, args.epochs + 1):
-        previous_loss = train(model, train_loader, optimizer, epoch)
-        test(model, test_loader)
+        train(model, train_loader, optimizer, epoch, writer)
+        test(model, test_loader, len(train_loader), epoch, writer)
+
+        # Save model checkpoint
         utils.checkpoint({
             'epoch': epoch + 1,
             'state_dict': model.state_dict(),
             'optimizer': optimizer.state_dict()
         }, epoch)
 
-        if previous_loss < args.loss_threshold:
-            break
+    writer.close()
 
 
 if __name__ == "__main__":
