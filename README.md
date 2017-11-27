@@ -6,6 +6,8 @@
 A CUDA-enabled PyTorch implementation of CapsNet (Capsule Network) based on this paper:
 [Sara Sabour, Nicholas Frosst, Geoffrey E Hinton. Dynamic Routing Between Capsules. NIPS 2017](https://arxiv.org/abs/1710.09829)
 
+The current `test error is 0.21%` and the `best test error is 0.20%`. The current `test accuracy is 99.31%` and the `best test accuracy is 99.32%`.
+
 **What is a Capsule**
 
 > A Capsule is a group of neurons whose activity vector represents the instantiation parameters of a specific type of entity such as an object or object part.
@@ -95,17 +97,17 @@ You can download the pre-trained model from my [Google Drive](https://drive.goog
 
 ## Results
 
-### Test error
+### Test Error
 
 CapsNet classification test error on MNIST. The MNIST average and standard deviation results are reported from 3 trials.
 
-[WIP] The results can be reproduced by running the following commands.
+The results can be reproduced by running the following commands.
 
 ```bash
- python main.py --num-routing 1 --use-reconstruction-loss no --regularization-scale 0.0       #CapsNet-v1
- python main.py --num-routing 1 --use-reconstruction-loss yes --regularization-scale 0.0005   #CapsNet-v2
- python main.py --num-routing 3 --use-reconstruction-loss no --regularization-scale 0.0       #CapsNet-v3
- python main.py --num-routing 3 --use-reconstruction-loss yes --regularization-scale 0.0005   #CapsNet-v4
+ python main.py --epochs 50 --num-routing 1 --use-reconstruction-loss no --regularization-scale 0.0       #CapsNet-v1
+ python main.py --epochs 50 --num-routing 1 --use-reconstruction-loss yes --regularization-scale 0.0005   #CapsNet-v2
+ python main.py --epochs 50 --num-routing 3 --use-reconstruction-loss no --regularization-scale 0.0       #CapsNet-v3
+ python main.py --epochs 50 --num-routing 3 --use-reconstruction-loss yes --regularization-scale 0.0005   #CapsNet-v4
 ```
 
 Method | Routing | Reconstruction | MNIST (%) | *Paper*
@@ -114,69 +116,49 @@ Baseline |  -- | -- | -- | *0.39*
 CapsNet-v1 | 1 | no | -- | *0.34 (0.032)*
 CapsNet-v2 | 1 | yes | -- | *0.29 (0.011)*
 CapsNet-v3 | 3 | no | -- | *0.35 (0.036)*
-CapsNet-v4 | 3 | yes | -- | *0.25 (0.005)*
+CapsNet-v4 | 3 | yes | 0.21 | *0.25 (0.005)*
 
-### Training loss
+### Training Loss and Accuracy
 
-Log from the end of the last epoch. View the full log [here](results/training_testing_log.txt).
+The training losses and accuracies for CapsNet-v4 (50 epochs, 3 routing iteration, using reconstruction, regularization scale of 0.0005):
 
-```text
-... ... ... ... ... ... ... ... ... ... ...
-... ... ... ... ... ... ... ... ... ... ...
-Epoch: 10 [0/60000 (0%)]        Loss: 0.235540
-Epoch: 10 [1280/60000 (2%)]     Loss: 0.233107
-Epoch: 10 [2560/60000 (4%)]     Loss: 0.232818
-Epoch: 10 [3840/60000 (6%)]     Loss: 0.248812
-Epoch: 10 [5120/60000 (9%)]     Loss: 0.246014
-Epoch: 10 [6400/60000 (11%)]    Loss: 0.237645
-Epoch: 10 [7680/60000 (13%)]    Loss: 0.248725
-Epoch: 10 [8960/60000 (15%)]    Loss: 0.237840
-Epoch: 10 [10240/60000 (17%)]   Loss: 0.246938
-Epoch: 10 [11520/60000 (19%)]   Loss: 0.247348
-Epoch: 10 [12800/60000 (21%)]   Loss: 0.246758
-Epoch: 10 [14080/60000 (23%)]   Loss: 0.246680
-Epoch: 10 [15360/60000 (26%)]   Loss: 0.253511
-Epoch: 10 [16640/60000 (28%)]   Loss: 0.232439
-Epoch: 10 [17920/60000 (30%)]   Loss: 0.229010
-Epoch: 10 [19200/60000 (32%)]   Loss: 0.241444
-Epoch: 10 [20480/60000 (34%)]   Loss: 0.239509
-Epoch: 10 [21760/60000 (36%)]   Loss: 0.235857
-Epoch: 10 [23040/60000 (38%)]   Loss: 0.240081
-Epoch: 10 [24320/60000 (41%)]   Loss: 0.233029
-Epoch: 10 [25600/60000 (43%)]   Loss: 0.239576
-Epoch: 10 [26880/60000 (45%)]   Loss: 0.252535
-Epoch: 10 [28160/60000 (47%)]   Loss: 0.243013
-Epoch: 10 [29440/60000 (49%)]   Loss: 0.264241
-Epoch: 10 [30720/60000 (51%)]   Loss: 0.241051
-Epoch: 10 [32000/60000 (53%)]   Loss: 0.247486
-Epoch: 10 [33280/60000 (55%)]   Loss: 0.238380
-Epoch: 10 [34560/60000 (58%)]   Loss: 0.253946
-Epoch: 10 [35840/60000 (60%)]   Loss: 0.258566
-Epoch: 10 [37120/60000 (62%)]   Loss: 0.244170
-Epoch: 10 [38400/60000 (64%)]   Loss: 0.240550
-Epoch: 10 [39680/60000 (66%)]   Loss: 0.232219
-Epoch: 10 [40960/60000 (68%)]   Loss: 0.233181
-Epoch: 10 [42240/60000 (70%)]   Loss: 0.246600
-Epoch: 10 [43520/60000 (72%)]   Loss: 0.235462
-Epoch: 10 [44800/60000 (75%)]   Loss: 0.246548
-Epoch: 10 [46080/60000 (77%)]   Loss: 0.234177
-Epoch: 10 [47360/60000 (79%)]   Loss: 0.240156
-Epoch: 10 [48640/60000 (81%)]   Loss: 0.246746
-Epoch: 10 [49920/60000 (83%)]   Loss: 0.232246
-Epoch: 10 [51200/60000 (85%)]   Loss: 0.237809
-Epoch: 10 [52480/60000 (87%)]   Loss: 0.250668
-Epoch: 10 [53760/60000 (90%)]   Loss: 0.233228
-Epoch: 10 [55040/60000 (92%)]   Loss: 0.245191
-Epoch: 10 [56320/60000 (94%)]   Loss: 0.251059
-Epoch: 10 [57600/60000 (96%)]   Loss: 0.236024
-Epoch: 10 [58880/60000 (98%)]   Loss: 0.236005
-```
+![](results/train_loss_accuracy.png)
 
-### Evaluation accuracy
-```text
-Test set: Average loss: 0.0020, Accuracy: 9908/10000 (99%)
-Checkpoint saved to model_epoch_10.pth
-```
+Training accuracy. Highest training accuracy: 100%
+
+![](results/train_accuracy.png)
+
+Training loss. Lowest training error: 0.1938%
+
+![](results/train_loss.png)
+
+### Test Loss and Accuracy
+
+The test losses and accuracies for CapsNet-v4 (50 epochs, 3 routing iteration, using reconstruction, regularization scale of 0.0005):
+
+![](results/test_loss_accuracy.png)
+
+Test accuracy. Highest test accuracy: 99.32%
+
+![](results/test_accuracy.png)
+
+Test loss. Lowest test error: 0.2002%
+
+![](results/test_loss.png)
+
+### Training Speed
+
+Around `3.25s / batch` or `25min / epoch` on a single Testla K80 GPU.
+
+![](results/training_speed.png)
+
+In my case, these are the hyperparameters I used for the training setup:
+
+- batch size: 128
+- Epochs: 50
+- Num. of routing: 3
+- Use reconstruction loss: yes
+- Regularization scale for reconstruction loss: 0.0005
 
 ### Reconstruction
 
@@ -189,7 +171,7 @@ Digits at left are reconstructed images.
      <img src="results/reconstructed_images.png"/>
     </td>
     <td>
-      <p>[WIP] Ground truth image from paper</p>
+      <p>[WIP] Ground truth image from dataset</p>
     </td>
   </tr>
 </table>
@@ -207,7 +189,7 @@ Digits at left are reconstructed images.
 - [x] Add visualization for training and evaluation metrics.
 - [x] Implement recontruction loss.
 - [x] Check algorithm for correctness.
-- [ ] Update results from TensorBoard after making improvements and bug fixes.
+- [x] Update results from TensorBoard after making improvements and bug fixes.
 - [ ] Publish updated pre-trained model weights.
 - [x] Log the original and reconstructed images using TensorBoard.
 
