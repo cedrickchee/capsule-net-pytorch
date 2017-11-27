@@ -121,7 +121,7 @@ class Net(nn.Module):
             # so that it does not dominate the margin loss.
             total_loss = m_loss + recon_loss * self.regularization_scale
 
-        return total_loss, m_loss, recon_loss
+        return total_loss, m_loss, (recon_loss * self.regularization_scale)
 
     def margin_loss(self, input, target):
         """
