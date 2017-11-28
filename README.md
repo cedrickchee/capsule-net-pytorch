@@ -35,9 +35,9 @@ The model was trained on the standard [MNIST](http://yann.lecun.com/exdb/mnist/)
 - [PyTorch](http://pytorch.org/)
     - Tested with version 0.2.0.post4.
     - Code will not run with version 0.1.2 due to `keepdim` not available in this version.
-- TorchVision
-- tensorboardX
-- tqdm
+- [TorchVision](https://github.com/pytorch/vision)
+- [tensorboardX](https://github.com/lanpa/tensorboard-pytorch)
+- [tqdm](https://github.com/tqdm/tqdm)
 
 ## Usage
 
@@ -67,15 +67,24 @@ $ CUDA_VISIBLE_DEVICES=0,1,2,3,4,5,6,7 python main.py --epochs 30 --num-routing 
 **Step 3.**
 Test a pre-trained model:
 
-If you have trained a model in Step 2 above, then the trained model will be saved to `results/trained_model/model_epoch_10.pth`. [WIP] Now just run the following command to get test results.
+If you have trained a model in Step 2 above, then the weights for the trained model will be saved to `results/trained_model/model_epoch_10.pth`. [WIP] Now just run the following command to get test results.
 
 ```bash
 $ python main.py --is-training 0 --weights results/trained_model/model_epoch_10.pth
 ```
 
-You can download the pre-trained model from my [Google Drive](https://drive.google.com/uc?export=download&id=1ojmG1nEkQKGPKO9lJr5gIupvNnKnyZ87).
+### Pre-trained Model
 
-**The default hyper parameters:**
+You can download the weights for the pre-trained model from my Google Drive. We saved the weights (model state dict) and the optimizer state for the model at the end of every training epoch.
+
+- Weights from [epoch 50 checkpoint](https://drive.google.com/uc?export=download&id=1lYtOMSreP4I9hr9un4DsBJZrzodI6l2d) [84 MB].
+- Weights from [epoch 40 to 50](https://drive.google.com/uc?export=download&id=1VMuVtJrecz47czsT5HqLxZpFjkLoMKaL) checkpoints [928 MB].
+
+Uncompress and put the weights (.pth files) into `./results/trained_model/`.
+
+*Note: the model was **last trained** on 2017-11-26 and the weights **last updated** on 2017-11-28.*
+
+### The Default Hyper Parameters
 
 | Parameter | Value | CLI arguments |
 | --- | --- | --- |
@@ -242,10 +251,27 @@ decoder.fc3.bias: [784]
 Total number of parameters (with reconstruction network): 8227088 (8 million)
 ```
 
+### TensorBoard
+
+We logged the training and test losses and accuracies using tensorboardX. TensorBoard helps us visualize how the machine learn over time. We can visualize statistics, such as how the objective function is changing or weights or accuracy varied during training.
+
+TensorBoard operates by reading TensorFlow data (events files).
+
+#### How to Use TensorBoard
+
+1. Download a [copy of the events files](https://drive.google.com/uc?export=download&id=1lZVffeZTkUQfSxmZmYDViRzmhb59wBWL) for the latest run from my Google Drive.
+2. Uncompress the file and put it into `./runs`.
+3. Check to ensure you have installed tensorflow (CPU version). We need this for TensorBoard server and dashboard.
+4. Start TensorBoard.
+```bash
+$ tensorboard --logdir runs
+```
+5. Open TensorBoard dashboard in your web browser using this URL: http://localhost:6006
+
 ## TODO
 - [x] Publish results.
 - [x] More testing.
-- [ ] Command to test a pre-trained model.
+- [ ] Inference mode - command to test a pre-trained model.
 - [ ] Jupyter Notebook version.
 - [ ] Create a sample to show how we can apply CapsNet to real-world application.
 - [ ] Experiment with CapsNet:
@@ -256,8 +282,10 @@ Total number of parameters (with reconstruction network): 8227088 (8 million)
 - [x] Implement recontruction loss.
 - [x] Check algorithm for correctness.
 - [x] Update results from TensorBoard after making improvements and bug fixes.
-- [ ] Publish updated pre-trained model weights.
+- [x] Publish updated pre-trained model weights.
 - [x] Log the original and reconstructed images using TensorBoard.
+- [ ] Update results with reconstructed image and original image.
+- [ ] Resume training by loading model checkpoint.
 
 *WIP is an acronym for Work-In-Progress*
 
