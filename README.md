@@ -176,6 +176,72 @@ Digits at left are reconstructed images.
   </tr>
 </table>
 
+### Model Design
+
+```bash
+Model architecture:
+------------------
+
+Net (
+  (conv1): ConvLayer (
+    (conv0): Conv2d(1, 256, kernel_size=(9, 9), stride=(1, 1))
+    (relu): ReLU (inplace)
+  )
+  (primary): CapsuleLayer (
+    (conv_units): ModuleList (
+      (0): Conv2d(256, 32, kernel_size=(9, 9), stride=(2, 2))
+      (1): Conv2d(256, 32, kernel_size=(9, 9), stride=(2, 2))
+      (2): Conv2d(256, 32, kernel_size=(9, 9), stride=(2, 2))
+      (3): Conv2d(256, 32, kernel_size=(9, 9), stride=(2, 2))
+      (4): Conv2d(256, 32, kernel_size=(9, 9), stride=(2, 2))
+      (5): Conv2d(256, 32, kernel_size=(9, 9), stride=(2, 2))
+      (6): Conv2d(256, 32, kernel_size=(9, 9), stride=(2, 2))
+      (7): Conv2d(256, 32, kernel_size=(9, 9), stride=(2, 2))
+    )
+  )
+  (digits): CapsuleLayer (
+  )
+  (decoder): Decoder (
+    (fc1): Linear (160 -> 512)
+    (fc2): Linear (512 -> 1024)
+    (fc3): Linear (1024 -> 784)
+    (relu): ReLU (inplace)
+    (sigmoid): Sigmoid ()
+  )
+)
+
+Parameters and size:
+-------------------
+
+conv1.conv0.weight: [256, 1, 9, 9]
+conv1.conv0.bias: [256]
+primary.conv_units.0.weight: [32, 256, 9, 9]
+primary.conv_units.0.bias: [32]
+primary.conv_units.1.weight: [32, 256, 9, 9]
+primary.conv_units.1.bias: [32]
+primary.conv_units.2.weight: [32, 256, 9, 9]
+primary.conv_units.2.bias: [32]
+primary.conv_units.3.weight: [32, 256, 9, 9]
+primary.conv_units.3.bias: [32]
+primary.conv_units.4.weight: [32, 256, 9, 9]
+primary.conv_units.4.bias: [32]
+primary.conv_units.5.weight: [32, 256, 9, 9]
+primary.conv_units.5.bias: [32]
+primary.conv_units.6.weight: [32, 256, 9, 9]
+primary.conv_units.6.bias: [32]
+primary.conv_units.7.weight: [32, 256, 9, 9]
+primary.conv_units.7.bias: [32]
+digits.weight: [1, 1152, 10, 16, 8]
+decoder.fc1.weight: [512, 160]
+decoder.fc1.bias: [512]
+decoder.fc2.weight: [1024, 512]
+decoder.fc2.bias: [1024]
+decoder.fc3.weight: [784, 1024]
+decoder.fc3.bias: [784]
+
+Total number of parameters (with reconstruction network): 8227088 (8 million)
+```
+
 ## TODO
 - [x] Publish results.
 - [x] More testing.
