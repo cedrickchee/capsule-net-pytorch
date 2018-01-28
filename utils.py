@@ -177,7 +177,7 @@ def accuracy(output, target, cuda_enabled=True):
     batch_size = target.size(0)
 
     v_length = torch.sqrt((output**2).sum(dim=2, keepdim=True))
-    softmax_v = softmax(v_length, dim=1)
+    softmax_v = F.softmax(v_length, dim=1)
     assert softmax_v.size() == torch.Size([batch_size, 10, 1, 1])
 
     _, max_index = softmax_v.max(dim=1)

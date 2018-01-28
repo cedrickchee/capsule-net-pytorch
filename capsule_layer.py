@@ -9,6 +9,7 @@ Author: Cedric Chee
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 from torch.autograd import Variable
 import utils
 
@@ -103,7 +104,7 @@ class CapsuleLayer(nn.Module):
 
             # Calculate routing or also known as coupling coefficients (c_ij).
             # c_ij shape: [1, 1152, 10, 1]
-            c_ij = utils.softmax(b_ij, dim=2)  # Convert routing logits (b_ij) to softmax.
+            c_ij = F.softmax(b_ij, dim=2)  # Convert routing logits (b_ij) to softmax.
             # c_ij shape from: [128, 1152, 10, 1] to: [128, 1152, 10, 1, 1]
             c_ij = torch.cat([c_ij] * batch_size, dim=0).unsqueeze(4)
 
