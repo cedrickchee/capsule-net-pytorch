@@ -36,6 +36,8 @@ The model was trained on the standard [MNIST](http://yann.lecun.com/exdb/mnist/)
 - [PyTorch](http://pytorch.org/)
     - Tested with version 0.2.0.post4 and 0.3.0.post4
     - Code will not run with version 0.1.2 due to `keepdim` not available in this version.
+- CUDA 8 and above
+  - Tested with CUDA 8 and CUDA 9.
 - [TorchVision](https://github.com/pytorch/vision)
 - [tensorboardX](https://github.com/lanpa/tensorboard-pytorch)
 - [tqdm](https://github.com/tqdm/tqdm)
