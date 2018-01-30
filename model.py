@@ -21,9 +21,10 @@ class Net(nn.Module):
     A simple CapsNet with 3 layers
     """
 
-    def __init__(self, num_conv_in_channel, num_conv_out_channel, num_primary_unit, primary_unit_size,
-                 num_classes, output_unit_size, num_routing,
-                 use_reconstruction_loss, regularization_scale, cuda_enabled):
+    def __init__(self, num_conv_in_channel, num_conv_out_channel, num_primary_unit,
+                 primary_unit_size, num_classes, output_unit_size, num_routing,
+                 use_reconstruction_loss, regularization_scale, input_width, input_height,
+                 cuda_enabled):
         """
         In the constructor we instantiate one ConvLayer module and two CapsuleLayer modules
         and assign them as member variables.
@@ -34,9 +35,12 @@ class Net(nn.Module):
 
         # Configurations used for image reconstruction.
         self.use_reconstruction_loss = use_reconstruction_loss
-        self.image_width = 28 # MNIST digit image width
-        self.image_height = 28 # MNIST digit image height
-        self.image_channel = 1 # MNIST digit image channel
+        # Input image size and number of channel.
+        # By default, for MNIST, the image width and height is 28x28
+        # and 1 channel for black/white.
+        self.image_width = input_width
+        self.image_height = input_height
+        self.image_channel = num_conv_in_channel
 
         # Also known as lambda reconstruction. Default value is 0.0005.
         # We use sum of squared errors (SSE) similar to paper.
@@ -69,7 +73,8 @@ class Net(nn.Module):
 
         # Reconstruction network
         if use_reconstruction_loss:
-            self.decoder = Decoder(num_classes, output_unit_size, cuda_enabled)
+            self.decoder = Decoder(num_classes, output_unit_size, input_width,
+                                   input_height, num_conv_in_channel, cuda_enabled)
 
     def forward(self, x):
         """

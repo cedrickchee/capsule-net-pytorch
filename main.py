@@ -177,11 +177,13 @@ def test(model, data_loader, num_train_batches, epoch, writer):
     # Get the reconstructed images of the last batch
     if args.use_reconstruction_loss:
         reconstruction = model.decoder(output, target)
-        image_width = 28 # MNIST digit image width
-        image_height = 28 # MNIST digit image height
-        image_channel = 1 # MNIST digit image channel
+        # Input image size and number of channel.
+        # By default, for MNIST, the image width and height is 28x28 and 1 channel for black/white.
+        image_width = args.input_width
+        image_height = args.input_height
+        image_channel = args.num_conv_in_channel
         recon_img = reconstruction.view(-1, image_channel, image_width, image_height)
-        assert recon_img.size() == torch.Size([batch_size, 1, 28, 28])
+        assert recon_img.size() == torch.Size([batch_size, image_channel, image_width, image_height])
 
         # Save the image into file system
         utils.save_image(recon_img, 'results/recons_image_test_{}_{}.png'.format(epoch, global_step))
@@ -264,6 +266,11 @@ def main():
                         help='use an additional reconstruction loss. default=True')
     parser.add_argument('--regularization-scale', type=float, default=0.0005,
                         help='regularization coefficient for reconstruction loss. default=0.0005')
+    parser.add_argument('--dataset', help='the name of dataset (mnist, cifar10)', default='mnist')
+    parser.add_argument('--input-width', type=int,
+                        default=28, help='input image width to the convolution. default=28 for MNIST')
+    parser.add_argument('--input-height', type=int,
+                        default=28, help='input image height to the convolution. default=28 for MNIST')
 
     args = parser.parse_args()
 
@@ -278,7 +285,7 @@ def main():
         torch.cuda.manual_seed(args.seed)
 
     # Load data
-    train_loader, test_loader = utils.load_mnist(args)
+    train_loader, test_loader = utils.load_data(args)
 
     # Build Capsule Network
     print('===> Building model')
@@ -291,6 +298,8 @@ def main():
                 num_routing=args.num_routing,
                 use_reconstruction_loss=args.use_reconstruction_loss,
                 regularization_scale=args.regularization_scale,
+                input_width=args.input_width,
+                input_height=args.input_height,
                 cuda_enabled=args.cuda)
 
     if args.cuda:
@@ -307,12 +316,14 @@ def main():
     for name, param in model.named_parameters():
         print('{}: {}'.format(name, list(param.size())))
 
-    # CapsNet has 8.2M parameters and 6.8M parameters without the reconstruction subnet.
+    # CapsNet has:
+    # - 8.2M parameters and 6.8M parameters without the reconstruction subnet on MNIST.
+    # - 11.8M parameters and 8.0M parameters without the reconstruction subnet on CIFAR10.
     num_params = sum([param.nelement() for param in model.parameters()])
 
     # The coupling coefficients c_ij are not included in the parameter list,
-    # we need to add them manually, which is 1152 * 10 = 11520.
-    print('\nTotal number of parameters: {}\n'.format(num_params + 11520))
+    # we need to add them manually, which is 1152 * 10 = 11520 (on MNIST) or 2048 * 10 (on CIFAR10)
+    print('\nTotal number of parameters: {}\n'.format(num_params + (11520 if args.dataset == 'mnist' else 20480)))
 
     # Optimizer
     optimizer = optim.Adam(model.parameters(), lr=args.lr)

@@ -27,10 +27,11 @@ class Decoder(nn.Module):
     This Decoder network is used in training and prediction (testing).
     """
 
-    def __init__(self, num_classes, output_unit_size, cuda_enabled):
+    def __init__(self, num_classes, output_unit_size, input_width,
+                 input_height, num_conv_in_channel, cuda_enabled):
         """
         The decoder network consists of 3 fully connected layers, with
-        512, 1024, 784 neurons each.
+        512, 1024, 784 (or 3072 for CIFAR10) neurons each.
         """
         super(Decoder, self).__init__()
 
@@ -38,9 +39,10 @@ class Decoder(nn.Module):
 
         fc1_output_size = 512
         fc2_output_size = 1024
+        self.fc3_output_size = input_width * input_height * num_conv_in_channel
         self.fc1 = nn.Linear(num_classes * output_unit_size, fc1_output_size) # input dim 10 * 16.
         self.fc2 = nn.Linear(fc1_output_size, fc2_output_size)
-        self.fc3 = nn.Linear(fc2_output_size, 784)
+        self.fc3 = nn.Linear(fc2_output_size, self.fc3_output_size)
         # Activation functions
         self.relu = nn.ReLU(inplace=True)
         self.sigmoid = nn.Sigmoid()
@@ -49,14 +51,14 @@ class Decoder(nn.Module):
         """
         We send the outputs of the `DigitCaps` layer, which is a
         [batch_size, 10, 16] size tensor into the Decoder network, and
-        reconstruct a [batch_size, 784] size tensor representing the image.
+        reconstruct a [batch_size, fc3_output_size] size tensor representing the image.
 
         Args:
             x: [batch_size, 10, 16] The output of the digit capsule.
             target: [batch_size, 10] One-hot MNIST dataset labels.
 
         Returns:
-            reconstruction: [batch_size, 784] Tensor of reconstructed images.
+            reconstruction: [batch_size, fc3_output_size] Tensor of reconstructed images.
         """
         batch_size = target.size(0)
 
@@ -77,8 +79,8 @@ class Decoder(nn.Module):
         # Forward pass of the network
         fc1_out = self.relu(self.fc1(vector_j))
         fc2_out = self.relu(self.fc2(fc1_out)) # shape: [batch_size, 1024]
-        reconstruction = self.sigmoid(self.fc3(fc2_out)) # shape: [batch_size, 784]
+        reconstruction = self.sigmoid(self.fc3(fc2_out)) # shape: [batch_size, fc3_output_size]
 
-        assert reconstruction.size() == torch.Size([batch_size, 784])
+        assert reconstruction.size() == torch.Size([batch_size, self.fc3_output_size])
 
         return reconstruction
