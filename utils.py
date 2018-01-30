@@ -16,13 +16,6 @@ import torchvision.utils as vutils
 import argparse
 
 
-# Normalize MNIST dataset.
-data_transform = transforms.Compose([
-    transforms.ToTensor(),
-    transforms.Normalize((0.1307,), (0.3081,))
-])
-
-
 def one_hot_encode(target, length):
     """Converts batches of class indices to classes of one-hot vectors."""
     batch_s = target.size(0)
@@ -45,10 +38,16 @@ def load_mnist(args):
     """Load MNIST dataset.
     The data is split and normalized between train and test sets.
     """
+    # Normalize MNIST dataset.
+    data_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
+
     kwargs = {'num_workers': args.threads,
               'pin_memory': True} if args.cuda else {}
 
-    print('===> Loading training datasets')
+    print('===> Loading MNIST training datasets')
     # MNIST dataset
     training_set = datasets.MNIST(
         './data', train=True, download=True, transform=data_transform)
@@ -56,13 +55,57 @@ def load_mnist(args):
     training_data_loader = DataLoader(
         training_set, batch_size=args.batch_size, shuffle=True, **kwargs)
 
-    print('===> Loading testing datasets')
+    print('===> Loading MNIST testing datasets')
     testing_set = datasets.MNIST(
         './data', train=False, download=True, transform=data_transform)
     testing_data_loader = DataLoader(
         testing_set, batch_size=args.test_batch_size, shuffle=True, **kwargs)
 
     return training_data_loader, testing_data_loader
+
+
+def load_cifar10(args):
+    """Load CIFAR10 dataset.
+    The data is split and normalized between train and test sets.
+    """
+    # Normalize CIFAR10 dataset.
+    data_transform = transforms.Compose([
+        transforms.ToTensor(),
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
+
+    kwargs = {'num_workers': args.threads,
+              'pin_memory': True} if args.cuda else {}
+
+    print('===> Loading CIFAR10 training datasets')
+    # CIFAR10 dataset
+    training_set = datasets.CIFAR10(
+        './data', train=True, download=True, transform=data_transform)
+    # Input pipeline
+    training_data_loader = DataLoader(
+        training_set, batch_size=args.batch_size, shuffle=True, **kwargs)
+
+    print('===> Loading CIFAR10 testing datasets')
+    testing_set = datasets.CIFAR10(
+        './data', train=False, download=True, transform=data_transform)
+    testing_data_loader = DataLoader(
+        testing_set, batch_size=args.test_batch_size, shuffle=True, **kwargs)
+
+    return training_data_loader, testing_data_loader
+
+
+def load_data(args):
+    """
+    Load dataset.
+    """
+    dst = args.dataset
+
+    if dst == 'mnist':
+        return load_mnist(args)
+    elif dst == 'cifar10':
+        return load_cifar10(args)
+    else:
+        raise Exception('Invalid dataset, please check the name of dataset:', dst)
 
 
 def squash(sj, dim=2):
@@ -132,8 +175,12 @@ def save_image(image, file_name):
     Save a given image into an image file
     """
     # Check number of channels in an image.
-    if image.size(1) == 1:
-        # Grayscale
+    if image.size(1) == 2:
+        # 2-channel image
+        zeros = torch.zeros(image.size(0), 1, image.size(2), image.size(3))
+        image_tensor = torch.cat([zeros, image.data.cpu()], dim=1)
+    else:
+        # Grayscale or RGB image
         image_tensor = image.data.cpu() # get Tensor from Variable
 
     vutils.save_image(image_tensor, file_name)
