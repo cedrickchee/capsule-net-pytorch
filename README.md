@@ -30,12 +30,15 @@ The model was trained on the standard [MNIST](http://yann.lecun.com/exdb/mnist/)
 
 *Note: you don't have to manually download, preprocess, and load the MNIST dataset as [TorchVision](https://github.com/pytorch/vision) will take care of this step for you.*
 
+I have tried using other datasets. See the [Other Datasets](#other-datasets) section below for more details.
+
 ## Requirements
 - Python 3
   - Tested with version 3.6.4
 - [PyTorch](http://pytorch.org/)
-    - Tested with version 0.2.0.post4 and 0.3.0.post4
+    - Tested with version 0.3.0.post4
     - Code will not run with version 0.1.2 due to `keepdim` not available in this version.
+    - Code will not run with version 0.2.0 due to `softmax` function doesn't takes a dimension.
 - CUDA 8 and above
   - Tested with CUDA 8 and CUDA 9.
 - [TorchVision](https://github.com/pytorch/vision)
@@ -106,6 +109,9 @@ Uncompress and put the weights (.pth files) into `./results/trained_model/`.
 | Num. routing iteration | 3 | --num-routing 3 |
 | Use reconstruction loss | true | --use-reconstruction-loss |
 | Regularization coefficient for reconstruction loss | 0.0005 | --regularization-scale 0.0005 |
+| Dataset name (mnist, cifar10) | mnist | --dataset mnist |
+| Input image width to the convolution | 28 | --input-width 28 |
+| Input image height to the convolution | 28 | --input-height 28 |
 
 ## Results
 
@@ -160,7 +166,8 @@ Test loss. Lowest test error: 0.2002%
 
 ### Training Speed
 
-Around `3.25s / batch` or `25min / epoch` on a single Testla K80 GPU.
+- Around `5.97s / batch` or `8min / epoch` on a single Tesla K80 GPU with batch size of 704.
+- Around `3.25s / batch` or `25min / epoch` on a single Tesla K80 GPUwith batch size of 128.
 
 ![](results/training_speed.png)
 
@@ -251,7 +258,7 @@ decoder.fc2.bias: [1024]
 decoder.fc3.weight: [784, 1024]
 decoder.fc3.bias: [784]
 
-Total number of parameters (with reconstruction network): 8227088 (8 million)
+Total number of parameters on (with reconstruction network): 8227088 (8 million)
 ```
 
 ### TensorBoard
@@ -271,6 +278,18 @@ $ tensorboard --logdir runs
 ```
 5. Open TensorBoard dashboard in your web browser using this URL: http://localhost:6006
 
+### Other Datasets
+
+#### CIFAR10
+
+In the spirit of experiment, I have tried using other datasets. I have updated the implementation so that it supports and works with CIFAR10. Need to note that I have not tested throughly our capsule model on CIFAR10.
+
+Here's how we can train and test the model on CIFAR10 by running the following commands.
+
+```bash
+python main.py --dataset cifar10 --num-conv-in-channel 3 --input-width 32 --input-height 32 --primary-unit-size 2048 --epochs 50 --num-routing 1 --use-reconstruction-loss yes --regularization-scale 0.0005
+```
+
 ## TODO
 - [x] Publish results.
 - [x] More testing.
@@ -278,8 +297,8 @@ $ tensorboard --logdir runs
 - [ ] Jupyter Notebook version.
 - [ ] Create a sample to show how we can apply CapsNet to real-world application.
 - [ ] Experiment with CapsNet:
-    * Try using another dataset.
-    * Come out a more creative model structure.
+    * [x] Try using another dataset.
+    * [ ] Come out a more creative model structure.
 - [x] Pre-trained model and weights.
 - [x] Add visualization for training and evaluation metrics.
 - [x] Implement recontruction loss.
