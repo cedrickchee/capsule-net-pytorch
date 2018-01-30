@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2018-01-30
+### Added
+- Supports and works with CIFAR10 dataset.
+
+### Changed
+- Upgrade to PyTorch 0.3.0.
+- Supports CUDA 9.
+- Drop our custom softmax function and switch to PyTorch softmax function.
+- Modify the save_image utils function to handle 3-channel (RGB) image.
+
+### Fixed
+- Compatibilities with PyTorch 0.3.0.
+
 ## [0.3.0] - 2017-11-27
 ### Added
 - Decoder network PyTorch module.
@@ -64,3 +77,4 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 [0.1.0]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v0.0.1...v0.1.0
 [0.2.0]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v0.1.0...v0.2.0
 [0.3.0]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v0.2.0...v0.3.0
+[0.4.0]: https://github.com/cedrickchee/capsule-net-pytorch/compare/v0.3.0...v0.4.0
