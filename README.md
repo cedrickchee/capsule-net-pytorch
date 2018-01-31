@@ -287,8 +287,26 @@ In the spirit of experiment, I have tried using other datasets. I have updated t
 Here's how we can train and test the model on CIFAR10 by running the following commands.
 
 ```bash
-python main.py --dataset cifar10 --num-conv-in-channel 3 --input-width 32 --input-height 32 --primary-unit-size 2048 --epochs 50 --num-routing 1 --use-reconstruction-loss yes --regularization-scale 0.0005
+python main.py --dataset cifar10 --num-conv-in-channel 3 --input-width 32 --input-height 32 --primary-unit-size 2048 --epochs 80 --num-routing 1 --use-reconstruction-loss yes --regularization-scale 0.0005
 ```
+
+##### Training Loss and Accuracy
+
+The training losses and accuracies for CapsNet-v4 (80 epochs, 3 routing iteration, using reconstruction, regularization scale of 0.0005):
+
+![](results/cifar10/train_loss_accuracy.png)
+
+- Highest training accuracy: 100%
+- Lowest training error: 0.3589%
+
+##### Test Loss and Accuracy
+
+The test losses and accuracies for CapsNet-v4 (80 epochs, 3 routing iteration, using reconstruction, regularization scale of 0.0005):
+
+![](results/cifar10/test_loss_accuracy.png)
+
+- Highest test accuracy: 71%
+- Lowest test error: 0.5735%
 
 ## TODO
 - [x] Publish results.
