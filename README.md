@@ -347,3 +347,8 @@ Here's some resources that we think will be helpful if you want to learn more ab
 - Videos:
   - [Capsule Networks: An Improvement to Convolutional Networks](https://www.youtube.com/watch?v=VKoLGnq15RM)
   - [Capsule Networks (CapsNets) – Tutorial](https://www.youtube.com/watch?v=pPN8d0E3900)
+
+## Other Implementations
+
+- TensorFlow:
+  - The first author of the paper, [Sara Sabour has released the code](https://github.com/Sarasra/models/tree/master/research/capsules).
