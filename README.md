@@ -313,7 +313,7 @@ The test losses and accuracies for CapsNet-v4 (80 epochs, 3 routing iteration, u
 - [x] More testing.
 - [ ] Inference mode - command to test a pre-trained model.
 - [ ] Jupyter Notebook version.
-- [ ] Create a sample to show how we can apply CapsNet to real-world application.
+- [x] Create a sample to show how we can apply CapsNet to real-world application.
 - [ ] Experiment with CapsNet:
     * [x] Try using another dataset.
     * [ ] Come out a more creative model structure.
@@ -352,3 +352,10 @@ Here's some resources that we think will be helpful if you want to learn more ab
 
 - TensorFlow:
   - The first author of the paper, [Sara Sabour has released the code](https://github.com/Sarasra/models/tree/master/research/capsules).
+
+## Real-world Application of CapsNet
+
+The following is a few samples in the wild that show how we can apply CapsNet to real-world use cases.
+
+- [An attempt to implement CapsNet for car make-model classification](https://www.reddit.com/r/MachineLearning/comments/80eiz3/p_implementing_a_capsnet_for_car_makemodel/)
+- [A Keras implementation of Capsule Network on Fashion MNIST dataset](https://github.com/XifengGuo/CapsNet-Fashion-MNIST)
