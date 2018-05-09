@@ -37,6 +37,7 @@ I have tried using other datasets. See the [Other Datasets](#other-datasets) sec
   - Tested with version 3.6.4
 - [PyTorch](http://pytorch.org/)
     - Tested with version 0.3.0.post4
+    - Migrate existing code to work in version 0.4.0. [Work-In-Progress]
     - Code will not run with version 0.1.2 due to `keepdim` not available in this version.
     - Code will not run with version 0.2.0 due to `softmax` function doesn't takes a dimension.
 - CUDA 8 and above
@@ -326,6 +327,7 @@ The test losses and accuracies for CapsNet-v4 (80 epochs, 3 routing iteration, u
 - [x] Log the original and reconstructed images using TensorBoard.
 - [ ] Update results with reconstructed image and original image.
 - [ ] Resume training by loading model checkpoint.
+- [ ] Migrate existing code to work in PyTorch 0.4.0.
 
 *WIP is an acronym for Work-In-Progress*
 
